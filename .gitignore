@@ -1,0 +1,26 @@
+# Logs
+logs
+_.log
+npm-debug.log_
+
+# Dependency directories
+node_modules/
+
+# Cache
+*.tsbuildinfo
+.eslintcache
+.npm
+vite.config.ts.timestamp*
+
+# dotenv environment variable files
+.env
+.env.dev
+.env.dev.local
+.env.test.local
+.env.production.local
+.env.local
+
+# MacOS files
+.DS_Store
+
+

@@ -1,0 +1,27 @@
+{
+  "name": "ai-hackathon-starter",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "description": "This repository is a starter template for AI hackathons, providing a basic structure and tools to kickstart your project.",
+  "scripts": {
+    "start": "node --import=tsx --env-file=.env ./src/main.ts",
+    "format": "prettier --write . \"src/**/*.{ts,tsx,json,mjs,yml,css}\" --cache",
+    "format:check": "prettier --check . \"src/**/*.{ts,tsx,json,mjs,yml,css}\" --cache"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/leanix-sandbox/ai-hackathon-starter.git"
+  },
+  "keywords": [],
+  "author": "Adrian Hernandez-Mendez",
+  "license": "MIT",
+  "homepage": "https://github.com/leanix-sandbox/ai-hackathon-starter#readme",
+  "devDependencies": {
+    "@total-typescript/tsconfig": "^1.0.4",
+    "@types/node": "^24.0.1",
+    "prettier": "^3.5.3",
+    "tsx": "^4.20.2",
+    "typescript": "^5.8.3"
+  }
+}
