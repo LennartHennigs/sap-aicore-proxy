@@ -2,7 +2,7 @@ import { AzureOpenAI } from 'openai';
 import { SapAiCoreHelper } from './lib/sap-ai-core-helper.js';
 
 const sapAiCoreHelper = new SapAiCoreHelper();
-const deploymentUrl = await sapAiCoreHelper.getModelDeploymentUrl('gpt-4o');
+const deploymentUrl = await sapAiCoreHelper.getModelDeploymentUrl('gpt-4.1');
 const tokenProvider = sapAiCoreHelper.accessTokenProvider;
 const extraHeaders = sapAiCoreHelper.getRequestHeaders();
 
@@ -15,7 +15,7 @@ const client = new AzureOpenAI({
 
 const userMessage = 'Describe in a single paragraph a Fact Sheet according to the LeanIX definition.';
 const completion = await client.chat.completions.create({
-  model: 'gpt-4o',
+  model: 'gpt-4.1',
   messages: [{ role: 'user', content: userMessage }]
 });
 
