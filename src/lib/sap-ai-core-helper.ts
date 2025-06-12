@@ -100,6 +100,9 @@ export class SapAiCoreHelper {
     if (!deployment) {
       throw new Error(`Model "${modelId}" is not currently deployed. Please deploy the model before proceeding.`);
     }
+    if (deployment.status !== 'RUNNING') {
+      throw new Error(`Model "${modelId}" is not in a running state. Current status: ${deployment.status}`);
+    }
 
     return deployment.deploymentUrl;
   }
