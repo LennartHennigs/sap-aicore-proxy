@@ -1,9 +1,10 @@
-import { Agent, MCPServerStdio, run, setTracingDisabled } from '@openai/agents';
+import { Agent, BatchTraceProcessor, ConsoleSpanExporter, MCPServerStdio, run, setTraceProcessors } from '@openai/agents';
 import { aisdk } from '@openai/agents-extensions';
 import { sapAiCore } from '@ai-foundry/sap-aicore-provider';
 
-// ⚠️ WARNING: Tracing is ENABLED by default! OpenAI Agents will send telemetry data unless you explicitly disable it below.
-setTracingDisabled(true);
+const exporter = new ConsoleSpanExporter();
+const processor = new BatchTraceProcessor(exporter);
+setTraceProcessors([processor]);
 
 const GITHUB_TOOLSETS = 'repos,issues,pull_requests';
 const GITHUB_TOKEN = process.env.GITHUB_ACCESS_TOKEN;
