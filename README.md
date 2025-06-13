@@ -26,10 +26,11 @@ npm start
 ## 🔑 Environment Vars
 
 ```env
-ACCESS_TOKEN_URL=
-CLIENT_ID=
-CLIENT_SECRET=
-AI_API_BASE_URL=
+ACCESS_TOKEN_BASE_URL=<access_token_url>
+CLIENT_ID=<client_id>
+CLIENT_SECRET=<client_secret>
+AI_API_BASE_URL=<ai_api_base_url>
+SAP_AICORE_DEPLOYMENT_URL=<sap_aicore_deployment_url>
 ```
 
 ---
