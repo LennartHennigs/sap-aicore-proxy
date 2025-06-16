@@ -8,6 +8,7 @@
     "start": "node --import=tsx --env-file=.env ./src/main.ts",
     "agent-handoffs": "node --import=tsx --env-file=.env ./src/agent-handoffs.ts",
     "github-mcp": "node --import=tsx --env-file=.env ./src/github-mcp.ts",
+    "playwright-mcp": "node --import=tsx --env-file=.env ./src/playwright-mcp.ts",
     "format": "prettier --write . \"src/**/*.{ts,tsx,json,mjs,yml,css}\" --cache",
     "format:check": "prettier --check . \"src/**/*.{ts,tsx,json,mjs,yml,css}\" --cache"
   },
