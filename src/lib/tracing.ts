@@ -1,5 +1,5 @@
 import { BatchTraceProcessor } from '@openai/agents';
-import { OTLPHttpExporter } from './lib/otlp/otlp-http-exporter.js';
+import { OTLPHttpExporter } from './otlp/otlp-http-exporter.js';
 
 const LANGFUSE_SECRET_KEY = process.env.LANGFUSE_SECRET_KEY;
 if (!LANGFUSE_SECRET_KEY) {
