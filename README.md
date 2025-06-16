@@ -25,12 +25,20 @@ npm start
 
 ## 🔑 Environment Vars
 
+Below are example values you can use in your `.env` file.  
+**Replace with your real credentials for production.**
+
 ```env
-ACCESS_TOKEN_BASE_URL=<access_token_url>
-CLIENT_ID=<client_id>
-CLIENT_SECRET=<client_secret>
-AI_API_BASE_URL=<ai_api_base_url>
-SAP_AICORE_DEPLOYMENT_URL=<sap_aicore_deployment_url>
+ACCESS_TOKEN_BASE_URL=https://your-auth.example.com
+CLIENT_ID=your-client-id
+CLIENT_SECRET=your-client-secret
+AI_API_BASE_URL=https://your-ai-api.example.com
+SAP_AICORE_DEPLOYMENT_URL=https://your-sap-ai-core-instance.example.com/v2/lm/deployments
+
+# Langfuse example secrets and endpoints
+LANGFUSE_SECRET_KEY=sk-lf-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+LANGFUSE_PUBLIC_KEY=pk-lf-yyyyyyyy-yyyy-yyyy-yyyy-yyyyyyyyyyyy
+LANGFUSE_ENDPOINT=http://localhost:3000
 ```
 
 ---
