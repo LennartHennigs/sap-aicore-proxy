@@ -8,9 +8,15 @@ setTraceProcessors([processor]);
 // Run the MCP server in a Docker container
 // Make sure you have Docker installed and running on your machine
 // Pull the latest Playwright MCP image before running this script
+// const mcpServer = new MCPServerStdio({
+//   name: 'Playwright MCP, via docker',
+//   fullCommand: `docker run -i --rm --init --pull=always mcr.microsoft.com/playwright/mcp`
+// });
+
+// MCP using npx
 const mcpServer = new MCPServerStdio({
-  name: 'Playwright MCP, via docker',
-  fullCommand: `docker run -i --rm --init --pull=always mcr.microsoft.com/playwright/mcp`
+  name: 'Playwright MCP, via npx',
+  fullCommand: `npx @playwright/mcp@latest --isolated`
 });
 
 try {
@@ -24,7 +30,7 @@ try {
   });
 
   const goal =
-    'Go directly to the url https://coffee-cart.app/ and buy a Cappuccino and an Espresso Macchiato on my Name Peter Grasmeier and use my email: peter.grasmeier@example.com';
+    'Go directly to the url https://coffee-cart.app/ and buy a Cappuccino and an Espresso Macchiato on my Name Peter Grasmeier and use my email: peter.grasmeier@example.com and write a review of what we bought and price.';
 
   const result = await run(agent, goal);
   console.log(result.finalOutput);
