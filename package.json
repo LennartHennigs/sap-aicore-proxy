@@ -6,6 +6,7 @@
   "description": "This repository is a starter template for AI hackathons, providing a basic structure and tools to kickstart your project.",
   "scripts": {
     "start": "node --import=tsx --env-file=.env ./src/main.ts",
+    "agent-handoffs": "node --import=tsx --env-file=.env ./src/agent-handoffs.ts",
     "format": "prettier --write . \"src/**/*.{ts,tsx,json,mjs,yml,css}\" --cache",
     "format:check": "prettier --check . \"src/**/*.{ts,tsx,json,mjs,yml,css}\" --cache"
   },
