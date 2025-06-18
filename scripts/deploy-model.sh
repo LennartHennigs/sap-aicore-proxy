@@ -58,12 +58,12 @@ get_access_token() {
     echo -n "$CLIENT_ID:$CLIENT_SECRET" | base64 | {
       read -r b64
       curl -fsS -H "Authorization: Basic $b64" \
-        "${ACCESS_TOKEN_URL%/}/oauth/token?grant_type=client_credentials" \
+        "${ACCESS_TOKEN_BASE_URL%/}/oauth/token?grant_type=client_credentials" \
       | jq -r '.access_token // empty'
     }
   )
-  [[ -n $ACCESS_TOKEN ]] || fatal "Unable to obtain access token."
-  readonly ACCESS_TOKEN
+  [[ -n $ACCESS_TOKEN_BASE_URL ]] || fatal "Unable to obtain access token."
+  readonly ACCESS_TOKEN_BASE_URL
 }
 
 ###############################################################################
