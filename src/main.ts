@@ -6,8 +6,8 @@ import { processor } from './lib/tracing.js';
 
 setTraceProcessors([processor]);
 
-const model = aisdk(sapAiCore('sap-aicore/o3'));
-//const model = aisdk(sapAiCore('sap-aicore/gpt-4.1'));
+const model = aisdk(sapAiCore('sap-aicore/gpt-4.1'));
+//const model = aisdk(sapAiCore('sap-aicore/o3'));
 //const model = aisdk(sapAiCore('sap-aicore/anthropic--claude-4-sonnet'));
 
 const getWeatherTool = tool({
