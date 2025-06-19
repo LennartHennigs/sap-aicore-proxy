@@ -1,8 +1,8 @@
 import { Agent, run, setTraceProcessors, tool } from '@openai/agents';
 import { aisdk } from '@openai/agents-extensions';
 import { sapAiCore } from '@ai-foundry/sap-aicore-provider';
-import { processor } from './lib/tracing.js';
 import z from 'zod';
+import { processor } from './lib/tracing.js';
 
 setTraceProcessors([processor]);
 
@@ -20,11 +20,11 @@ try {
     name: 'Weather agent',
     instructions: 'You provide weather information.',
     tools: [getWeatherTool],
-    model: aisdk(sapAiCore('sap-aicore/gpt-4.1'))
+    model: aisdk(sapAiCore('sap-aicore/anthropic--claude-4-sonnet'))
   });
 
-  const result = await run(agent, 'Hello what is the weather in Bonn and Ljubljana?');
+  const result = await run(agent, 'Hello what is the weather in Bonn?');
   console.log(result.finalOutput);
 } catch (error) {
-  console.error('Error running agent:', error);
+  console.error(JSON.stringify(error, null, 2));
 }

@@ -28,7 +28,7 @@
     "typescript": "^5.8.3"
   },
   "dependencies": {
-    "@ai-foundry/sap-aicore-provider": "^0.0.6",
+    "@ai-foundry/sap-aicore-provider": "^0.0.8",
     "@openai/agents": "^0.0.7",
     "@openai/agents-extensions": "^0.0.7",
     "zod": "^3.25.63"
