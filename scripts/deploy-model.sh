@@ -161,8 +161,7 @@ echo '🔎  Checking deployments…'
 deps=$(get_deployments)
 
 if jq -e --arg m "$TARGET_MODEL" --arg cid "$cid" '
-       .[] | select(.status=="RUNNING"
-            and .configurationId==$cid
+       .[] | select(.configurationId==$cid
             and ((.details.resources.backendDetails.model.name
                    // .details.resources.backend_details.model.name) == $m))
 ' <<<"$deps" >/dev/null; then
@@ -181,13 +180,13 @@ if jq -e --arg m "$TARGET_MODEL" --arg cid "$cid" '
   exit 0
 fi
 
-echo "🚀  Deploying \"$TARGET_MODEL\"…"
-# ── extract model name & version from the chosen configuration ──────────────
-mname=$(jq -r '.parameterBindings[]? | select(.key=="modelName") | .value' <<<"$config" | head -n1 )
-mver=$(jq -r '.parameterBindings[]? | select(.key=="modelVersion")  | .value' <<<"$config" | head -n1)
+# echo "🚀  Deploying \"$TARGET_MODEL\"…"
+# # ── extract model name & version from the chosen configuration ──────────────
+# mname=$(jq -r '.parameterBindings[]? | select(.key=="modelName") | .value' <<<"$config" | head -n1 )
+# mver=$(jq -r '.parameterBindings[]? | select(.key=="modelVersion")  | .value' <<<"$config" | head -n1)
 
-[[ -z $mname ]] && fatal "modelName not found in configuration."
-[[ -z $mver  ]] && fatal "modelVersion not found in configuration."
+# [[ -z $mname ]] && fatal "modelName not found in configuration."
+# [[ -z $mver  ]] && fatal "modelVersion not found in configuration."
 
-deploy "$cid" "$mname" "$mver" | jq .
-echo '✅  Deployment request sent.'
+# deploy "$cid" "$mname" "$mver" | jq .
+# echo '✅  Deployment request sent.'
