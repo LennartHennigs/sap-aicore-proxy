@@ -166,7 +166,18 @@ if jq -e --arg m "$TARGET_MODEL" --arg cid "$cid" '
             and ((.details.resources.backendDetails.model.name
                    // .details.resources.backend_details.model.name) == $m))
 ' <<<"$deps" >/dev/null; then
+  # Find the deployment and print its deploymentUrl if available
+  deployment_url=$(jq -r --arg m "$TARGET_MODEL" --arg cid "$cid" '
+    .[] | select(.status=="RUNNING"
+      and .configurationId==$cid
+      and ((.details.resources.backendDetails.model.name
+             // .details.resources.backend_details.model.name) == $m))
+    | .deploymentUrl // empty
+  ' <<<"$deps")
   echo "✅  \"$TARGET_MODEL\" already deployed."
+  if [[ -n "$deployment_url" ]]; then
+    echo "🌐  Deployment URL: $deployment_url"
+  fi
   exit 0
 fi
 
