@@ -42,3 +42,13 @@ LANGFUSE_ENDPOINT=http://localhost:3000
 ```
 
 ---
+
+## How to get the model deployment URL?
+
+To get the model deployment URL, you can use the SAP AI Core API. Here’s how for example to deploy gpt-4.1:
+
+```bash
+./scripts/deploy-model.sh gpt-4.1
+```
+
+This script will deploy the model and output the deployment URL, which you can then use in your `.env` file with the key `SAP_AICORE_DEPLOYMENT_URL`.
