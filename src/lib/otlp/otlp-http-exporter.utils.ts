@@ -86,8 +86,6 @@ function getSpanName(data: SpanData): string {
       return `Function: ${data.name}`;
     case 'generation':
       return `Chat completion with ${data.model ?? 'unknown model'}`;
-    case 'response':
-      return `Responses API`;
     case 'guardrail':
       return `Guardrail ${data.name} ${data.triggered ? 'triggered' : 'not triggered'}`;
     case 'handoff':
