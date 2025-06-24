@@ -44,6 +44,7 @@ function buildSpanAttributes(data: SpanData, error: SpanError | null): Array<{ k
       if (data.usage) {
         add('gen_ai.usage.input_tokens', data.usage.input_tokens);
         add('gen_ai.usage.output_tokens', data.usage.output_tokens);
+        add('gen_ai.usage.total_tokens', data.usage.total_tokens);
       }
       break;
 

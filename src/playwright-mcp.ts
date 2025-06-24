@@ -1,7 +1,7 @@
 import { Agent, MCPServerStdio, run, setTraceProcessors } from '@openai/agents';
-import { aisdk } from '@openai/agents-extensions';
 import { sapAiCore } from '@ai-foundry/sap-aicore-provider';
 import { processor } from './lib/tracing.js';
+import { aisdk } from './lib/ai-sdk.js';
 
 setTraceProcessors([processor]);
 

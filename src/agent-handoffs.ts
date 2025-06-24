@@ -1,9 +1,9 @@
 import { Agent, handoff, run, setTraceProcessors, tool, withTrace, type HandoffInputData } from '@openai/agents';
-import { aisdk } from '@openai/agents-extensions';
 import { removeAllTools } from '@openai/agents-core/extensions';
 import { sapAiCore } from '@ai-foundry/sap-aicore-provider';
 import { processor } from './lib/tracing.js';
 import z from 'zod';
+import { aisdk } from './lib/ai-sdk.js';
 
 setTraceProcessors([processor]);
 
