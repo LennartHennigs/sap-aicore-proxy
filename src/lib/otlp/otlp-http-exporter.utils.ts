@@ -32,27 +32,19 @@ function buildSpanAttributes(data: SpanData, error: SpanError | null): Array<{ k
 
     case 'function':
       add('name', data.name);
-      add('input', data.input);
-      add('output', data.output);
+      add('input.value', data.input);
+      add('output.value', data.output);
       add('mcp_data', data.mcp_data);
       break;
 
     case 'generation':
       add('gen_ai.request.model', data.model);
-      add('request_data', {
-        messages: [...(data.input ?? []), ...(data.output ?? [])],
-        model: data.model
-      });
+      add('input.value', [...(data.input ?? [])]);
+      add('output.value', [...(data.output ?? [])]);
       if (data.usage) {
         add('gen_ai.usage.input_tokens', data.usage.input_tokens);
         add('gen_ai.usage.output_tokens', data.usage.output_tokens);
       }
-      break;
-
-    case 'response':
-      add('response_id', data.response_id);
-      if (data._input) add('raw_input', data._input);
-      if (data._response) add('response', data._response);
       break;
 
     case 'guardrail':
@@ -68,22 +60,6 @@ function buildSpanAttributes(data: SpanData, error: SpanError | null): Array<{ k
     case 'custom':
       add('name', data.name);
       add('data', data.data);
-      break;
-
-    case 'transcription':
-      add('model', data.model);
-      add('input', { ...data.input, data: '[omitted]' });
-      if (data.output) add('output', data.output);
-      break;
-
-    case 'speech':
-      add('model', data.model);
-      add('input', data.input);
-      add('output', { ...data.output, data: '[omitted]' });
-      break;
-
-    case 'speech_group':
-      add('input', data.input);
       break;
 
     case 'mcp_tools':
@@ -118,12 +94,6 @@ function getSpanName(data: SpanData): string {
       return `Handoff: ${data.from_agent} → ${data.to_agent}`;
     case 'custom':
       return `Custom span: ${data.name}`;
-    case 'speech_group':
-      return `Text → Speech group`;
-    case 'speech':
-      return `Text → Speech`;
-    case 'transcription':
-      return `Speech → Text with ${data.model ?? 'unknown model'}`;
     case 'mcp_tools':
       return `MCP: list tools from server ${data.server ?? ''}`;
     default:
