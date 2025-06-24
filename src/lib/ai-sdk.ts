@@ -360,7 +360,7 @@ export class AiSdkModel implements Model {
   async getResponse(request: ModelRequest) {
     return withGenerationSpan(async (span) => {
       try {
-        span.spanData.model = this.#model.provider + ':' + this.#model.modelId;
+        span.spanData.model = this.#model.modelId;
         span.spanData.model_config = {
           provider: this.#model.provider,
           model_impl: 'ai-sdk'
