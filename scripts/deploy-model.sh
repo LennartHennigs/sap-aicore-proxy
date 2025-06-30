@@ -5,7 +5,7 @@
 #   ./deploy-model.sh MODEL_NAME
 #
 # Configuration comes from environment variables or a local .env file:
-#   CLIENT_ID, CLIENT_SECRET, ACCESS_TOKEN_URL, AI_API_BASE_URL
+#   AICORE_CLIENT_ID, AICORE_CLIENT_SECRET, ACCESS_TOKEN_URL, AICORE_BASE_URL
 #
 # Requires: jq
 
@@ -36,10 +36,10 @@ need jq
 # Required parameters & env-vars
 ###############################################################################
 readonly TARGET_MODEL="${1:-}"             || fatal "Model name required."
-readonly CLIENT_ID="${CLIENT_ID:-}"        || fatal "CLIENT_ID missing."
-readonly CLIENT_SECRET="${CLIENT_SECRET:-}"|| fatal "CLIENT_SECRET missing."
+readonly AICORE_CLIENT_ID="${AICORE_CLIENT_ID:-}"        || fatal "AICORE_CLIENT_ID missing."
+readonly AICORE_CLIENT_SECRET="${AICORE_CLIENT_SECRET:-}"|| fatal "AICORE_CLIENT_SECRET missing."
 readonly ACCESS_TOKEN_URL="${ACCESS_TOKEN_URL:-}" || fatal "ACCESS_TOKEN_URL missing."
-readonly API_BASE="${AI_API_BASE_URL:-}"   || fatal "AI_API_BASE_URL missing."
+readonly API_BASE="${AICORE_BASE_URL:-}"   || fatal "AICORE_BASE_URL missing."
 
 ###############################################################################
 # Curl plumbing
@@ -55,15 +55,15 @@ bearer() { curl -fsS "${CURL_COMMON_HEADERS[@]}" -H "Authorization: Bearer $ACCE
 ###############################################################################
 get_access_token() {
   ACCESS_TOKEN=$(
-    echo -n "$CLIENT_ID:$CLIENT_SECRET" | base64 | {
+    echo -n "$AICORE_CLIENT_ID:$AICORE_CLIENT_SECRET" | base64 | {
       read -r b64
       curl -fsS -H "Authorization: Basic $b64" \
-        "${ACCESS_TOKEN_BASE_URL%/}/oauth/token?grant_type=client_credentials" \
+        "${AICORE_AUTH_URL%/}/oauth/token?grant_type=client_credentials" \
       | jq -r '.access_token // empty'
     }
   )
-  [[ -n $ACCESS_TOKEN_BASE_URL ]] || fatal "Unable to obtain access token."
-  readonly ACCESS_TOKEN_BASE_URL
+  [[ -n $AICORE_AUTH_URL ]] || fatal "Unable to obtain access token."
+  readonly AICORE_AUTH_URL
 }
 
 ###############################################################################

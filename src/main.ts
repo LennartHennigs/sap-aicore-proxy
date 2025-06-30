@@ -1,10 +1,9 @@
-import { Agent, run, setTraceProcessors, tool } from '@openai/agents';
+import { Agent, run, setTracingDisabled, tool } from '@openai/agents';
 import { sapAiCore } from '@ai-foundry/sap-aicore-provider';
 import z from 'zod';
-import { processor } from './lib/tracing.js';
 import { aisdk } from './lib/ai-sdk.js';
 
-setTraceProcessors([processor]);
+setTracingDisabled(true);
 
 const model = aisdk(sapAiCore('sap-aicore/gpt-4.1'));
 //const model = aisdk(sapAiCore('sap-aicore/o3'));

@@ -29,11 +29,11 @@ Below are example values you can use in your `.env` file.
 **Replace with your real credentials for production.**
 
 ```env
-ACCESS_TOKEN_BASE_URL=https://your-auth.example.com
-CLIENT_ID=your-client-id
-CLIENT_SECRET=your-client-secret
-AI_API_BASE_URL=https://your-ai-api.example.com
-SAP_AICORE_DEPLOYMENT_URL=https://your-sap-ai-core-instance.example.com/v2/lm/deployments
+AICORE_AUTH_URL=https://your-auth.example.com
+AICORE_CLIENT_ID=your-client-id
+AICORE_CLIENT_SECRET=your-client-secret
+AICORE_BASE_URL=https://your-ai-api.example.com
+AICORE_DEPLOYMENT_URL=https://your-sap-ai-core-instance.example.com/v2/lm/deployments
 
 # Langfuse example secrets and endpoints
 LANGFUSE_SECRET_KEY=sk-lf-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
@@ -51,4 +51,4 @@ To get the model deployment URL, you can use the SAP AI Core API. Here’s how f
 ./scripts/deploy-model.sh gpt-4.1
 ```
 
-This script will deploy the model and output the deployment URL, which you can then use in your `.env` file with the key `SAP_AICORE_DEPLOYMENT_URL`.
+This script will deploy the model and output the deployment URL, which you can then use in your `.env` file with the key `AICORE_DEPLOYMENT_URL`.
