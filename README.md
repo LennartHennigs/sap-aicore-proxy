@@ -33,7 +33,7 @@ AICORE_AUTH_URL=https://your-auth.example.com
 AICORE_CLIENT_ID=your-client-id
 AICORE_CLIENT_SECRET=your-client-secret
 AICORE_BASE_URL=https://your-ai-api.example.com
-AICORE_DEPLOYMENT_URL=https://your-sap-ai-core-instance.example.com/v2/lm/deployments
+AICORE_DEPLOYMENT_URL=https://your-sap-ai-core-instance.example.com/v2/lm/deployments/<deployment-id>
 
 # Langfuse example secrets and endpoints
 LANGFUSE_SECRET_KEY=sk-lf-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
