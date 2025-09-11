@@ -1,6 +1,6 @@
 # SAP AI Core Proxy 🚀
 
-A high-performance, enterprise-grade proxy server that provides OpenAI-compatible API access to SAP AI Core's AI models (GPT-5 nano, Claude 4 Sonnet, Gemini 2.5 Flash).
+A simple proxy server that provides OpenAI-compatible API access to SAP AI Core's AI deployed models.
 
 ---
 
@@ -20,7 +20,9 @@ cp .env.example .env   # copy from example and edit with your SAP AI Core creden
 # 4. Start proxy server
 npm start
 
-# 5. Stop proxy server (when needed)
+# 5. Run and (Configure) a LLM client of your choice
+
+# 6. Stop proxy server (when no longer needed)
 npm stop
 ```
 
@@ -36,7 +38,7 @@ Create a `.env` file from the provided `.env.example` template with your SAP AI 
 # SAP AI Core Configuration (Required)
 AICORE_AUTH_URL=https://your-auth-url.hana.ondemand.com
 AICORE_CLIENT_ID="your-client-id"
-AICORE_CLIENT_SECRET='your-client-secret'
+AICORE_CLIENT_SECRET="your-client-secret"
 AICORE_BASE_URL=https://api.ai.your-region.aws.ml.hana.ondemand.com
 
 # Server Configuration (Optional - defaults provided)
@@ -87,6 +89,15 @@ Configure your OpenAI-compatible AI client with these settings:
 - **API Key**: `any-string-works`
 - **Model**: `gpt-5-nano` or `anthropic--claude-4-sonnet` or `gemini-2.5-flash`
 
+### Compatible AI Clients
+
+This proxy works with any OpenAI-compatible client. Here are some popular options:
+
+- **[Open WebUI](https://docs.openwebui.com/)** - A feature-rich web interface for AI models with support for multiple providers, document uploads, and advanced conversation management
+- **[Chatbox](https://chatboxai.app/)** - A cross-platform desktop AI client with a clean interface, conversation history, and support for multiple AI providers
+
+Simply configure these clients with the proxy settings above to access SAP AI Core models through a familiar interface.
+
 ---
 
 ## 🛠️ Commands
@@ -95,7 +106,6 @@ Configure your OpenAI-compatible AI client with these settings:
 
 - `npm start` - Start optimized proxy server with model pooling
 - `npm run dev` - Start proxy in development mode with hot reload
-- `npm run start:legacy` - Start original proxy implementation (fallback)
 - `npm run proxy` - Alias for `npm start`
 - `npm stop` - Stop the proxy server
 
@@ -111,7 +121,7 @@ Configure your OpenAI-compatible AI client with these settings:
 
 ---
 
-## 🎯 Supported Models
+## 🎯 Supported / Tested Models
 
 - ✅ `gpt-5-nano` - OpenAI GPT-5 nano (working via SAP AI Core provider) **🌊 True Streaming** ⚪ Text-only
 - ✅ `anthropic--claude-4-sonnet` - Anthropic Claude 4 Sonnet (working via direct API) **📦 Mock Streaming** **👁️ Vision**
@@ -146,12 +156,46 @@ Configure your OpenAI-compatible AI client with these settings:
 
 ---
 
+## 📁 File Support
+
+The proxy provides comprehensive file handling capabilities for both text documents and images:
+
+### File Upload Support
+
+- **Text Files**: Automatic content extraction and processing for document analysis
+- **Image Files**: Full vision support with automatic format conversion
+- **Base64 Encoding**: Support for base64-encoded file data
+- **Multipart Forms**: Compatible with multipart/form-data uploads
+- **Large Files**: Configurable body size limits (default: 50MB)
+
+### File Processing Features
+
+- **Intelligent Routing**: Automatically routes image files to vision-capable models
+- **Content Extraction**: Extracts text content from uploaded documents
+- **Format Detection**: Automatically detects and handles different file formats
+- **Error Handling**: Graceful fallback when files cannot be processed
+- **Model Compatibility**: Provides helpful suggestions when files require specific model capabilities
+
+### File Usage Examples
+
+```
+"Analyze this document and summarize the key points"
+"What does this image show?"
+"Extract the text from this screenshot"
+"Compare these two documents"
+```
+
+**Note**: When uploading images to text-only models (like GPT-5 nano), the proxy will automatically suggest using vision-capable models (Claude 4 Sonnet or Gemini 2.5 Flash) for proper image analysis.
+
+---
+
 ## 🔍 Model Management
 
 ### Check Model Deployment Status
 
 ```bash
 ./scripts/deploy-model.sh gpt-5-nano
+<<<<<< dev
 ```
 
 This will check if the model is deployed in SAP AI Core and show deployment details.
@@ -167,10 +211,10 @@ This will generate `config/models.json` from all deployed models with generic pl
 ### List Deployed Models
 
 ```bash
-# List all deployed models
+# List all deployed models with support indicators
 ./scripts/list-deployed-models.sh
 
-# List only configured models
+# List only configured/supported models
 ./scripts/list-deployed-models.sh /all
 
 # Search for specific model
