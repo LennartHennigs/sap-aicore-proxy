@@ -1,29 +1,36 @@
 {
-  "name": "ai-hackathon-starter",
-  "version": "0.0.1",
+  "name": "sap-aicore-proxy",
+  "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "This repository is a starter template for AI hackathons, providing a basic structure and tools to kickstart your project.",
+  "description": "A high-performance, enterprise-grade proxy server that provides OpenAI-compatible API access to SAP AI Core's AI models (GPT-5 nano, Claude 4 Sonnet, Gemini 2.5 Flash).",
   "scripts": {
-    "start": "node --import=tsx --env-file=.env ./src/main.ts",
-    "agent-handoffs": "node --import=tsx --env-file=.env ./src/agent-handoffs.ts",
-    "github-mcp": "node --import=tsx --env-file=.env ./src/github-mcp.ts",
-    "playwright-mcp": "node --import=tsx --env-file=.env ./src/playwright-mcp.ts",
-    "format": "prettier --write . \"src/**/*.{ts,tsx,json,mjs,yml,css}\" --cache",
-    "format:check": "prettier --check . \"src/**/*.{ts,tsx,json,mjs,yml,css}\" --cache"
+    "start": "node --import=tsx --env-file=.env ./src/sap-aicore-proxy.ts",
+    "proxy": "node --import=tsx --env-file=.env ./src/sap-aicore-proxy.ts",
+    "stop": "pkill -f 'chatbox-proxy' || echo 'No proxy process found'",
+    "deploy-model": "./scripts/deploy-model.sh",
+    "dev": "node --import=tsx --env-file=.env --watch ./src/sap-aicore-proxy.ts",
+    "test": "node --import=tsx --env-file=.env ./tests/proxy-test-suite.ts",
+    "test:connection": "node --import=tsx --env-file=.env ./tests/unit/connection-tests.ts",
+    "test:text": "node --import=tsx --env-file=.env ./tests/unit/text-processing-tests.ts",
+    "test:image": "node --import=tsx --env-file=.env ./tests/unit/image-processing-tests.ts",
+    "test:validation": "node --import=tsx --env-file=.env ./tests/unit/response-validation-tests.ts",
+    "test:error": "node --import=tsx --env-file=.env ./tests/integration/error-handling-tests.ts",
+    "test:performance": "node --import=tsx --env-file=.env ./tests/performance/load-tests.ts",
+    "test:run": "./scripts/run-tests.sh",
+    "test:full": "./scripts/run-tests.sh -s -k all",
+    "test:report": "./scripts/run-tests.sh -r all"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/leanix-sandbox/ai-hackathon-starter.git"
   },
   "keywords": [],
-  "author": "Adrian Hernandez-Mendez",
+  "author": "Lennart Hennigs",
   "license": "MIT",
   "homepage": "https://github.com/leanix-sandbox/ai-hackathon-starter#readme",
   "devDependencies": {
-    "@total-typescript/tsconfig": "^1.0.4",
     "@types/node": "^24.0.1",
-    "prettier": "^3.5.3",
     "tsx": "^4.20.2",
     "typescript": "^5.8.3"
   },
@@ -31,6 +38,9 @@
     "@ai-foundry/sap-aicore-provider": "^0.0.10",
     "@ai-sdk/provider": "^1.1.3",
     "@openai/agents": "^0.0.7",
-    "zod": "^3.25.63"
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.3",
+    "cors": "^2.8.5",
+    "express": "^5.1.0"
   }
 }
