@@ -72,7 +72,8 @@ export function itemsToLanguageV1Messages(model: LanguageModelV1, items: protoco
                     };
                   }
                   if (c.type === 'input_image') {
-                    const url = new URL(c.image);
+                    const imageUrl = typeof c.image === 'string' ? c.image : c.image.id;
+                    const url = new URL(imageUrl);
                     return {
                       type: 'image',
                       image: url,
