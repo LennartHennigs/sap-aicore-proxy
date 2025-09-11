@@ -195,6 +195,7 @@ The proxy provides comprehensive file handling capabilities for both text docume
 
 ```bash
 ./scripts/deploy-model.sh gpt-5-nano
+<<<<<< dev
 ```
 
 This will check if the model is deployed in SAP AI Core and show deployment details.
