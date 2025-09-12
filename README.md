@@ -8,7 +8,7 @@ A simple proxy server that provides OpenAI-compatible API access to SAP AI Core'
 
 ```bash
 # 1. Clone and enter
-git clone https://github.com/your-repo/sap-aicore-proxy.git
+git clone git@github.com:LennartHennigs/sap-aicore-proxy.git
 cd sap-aicore-proxy
 
 # 2. Install dependencies
