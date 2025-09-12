@@ -35,7 +35,7 @@ brew install git
 Clone a repository using HTTP (no SSH keys)
 
 ```shell
-git clone http://example.com/owner/repo.git
+git clone  git clone git@github.com:LennartHennigs/sap-aicore-proxy.git sein
 cd repo
 ```
 
