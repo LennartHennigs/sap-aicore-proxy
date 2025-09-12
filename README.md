@@ -109,6 +109,15 @@ Simply configure these clients with the proxy settings above to access SAP AI Co
 - `npm run proxy` - Alias for `npm start`
 - `npm stop` - Stop the proxy server
 
+**Note:**
+If you get this...
+```shell
+/Users/I529037/dev/sap-aicore-proxy/node_modules/finalhandler/index.js:14
+var debug = require('debug')('finalhandler')
+```
+...you need to update `node`.
+
+
 ### Model Management
 
 - `./scripts/deploy-model.sh <model-name> [--make-config] [--help]` - Check model deployment status
