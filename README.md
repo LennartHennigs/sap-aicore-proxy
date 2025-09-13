@@ -133,7 +133,6 @@ var debug = require('debug')('finalhandler')
 
 ```
 
-
 ### Model Management
 
 - `./scripts/deploy-model.sh <model-name> [--make-config] [--help]` - Check model deployment status
@@ -172,7 +171,7 @@ var debug = require('debug')('finalhandler')
 
 ### Vision Usage Examples
 
-```
+``` shell
 "What do you see in this image?"
 "Describe the colors and composition"
 "What text is visible in this screenshot?"

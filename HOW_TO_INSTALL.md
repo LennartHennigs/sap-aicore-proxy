@@ -74,6 +74,7 @@ brew update
 brew upgrade
 node -v
 npm -v
+brew upgrade node
 npm install -g npm@latest
 ```
 
