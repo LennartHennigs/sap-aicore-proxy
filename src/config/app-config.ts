@@ -13,7 +13,6 @@ interface AppConfig {
     clientSecret: string;
     authUrl: string;
     baseUrl: string;
-    deploymentUrl: string;
   };
   auth: {
     tokenExpiryBuffer: number; // seconds
@@ -72,8 +71,7 @@ export const config: AppConfig = {
     clientId: validateEnvVar('AICORE_CLIENT_ID', process.env.AICORE_CLIENT_ID),
     clientSecret: validateEnvVar('AICORE_CLIENT_SECRET', process.env.AICORE_CLIENT_SECRET),
     authUrl: validateEnvVar('AICORE_AUTH_URL', process.env.AICORE_AUTH_URL),
-    baseUrl: validateEnvVar('AICORE_BASE_URL', process.env.AICORE_BASE_URL),
-    deploymentUrl: validateEnvVar('AICORE_DEPLOYMENT_URL', process.env.AICORE_DEPLOYMENT_URL)
+    baseUrl: validateEnvVar('AICORE_BASE_URL', process.env.AICORE_BASE_URL)
   },
   auth: {
     tokenExpiryBuffer: parseInt(process.env.TOKEN_EXPIRY_BUFFER || '60', 10),

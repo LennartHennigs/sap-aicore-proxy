@@ -42,7 +42,6 @@ AICORE_CLIENT_SECRET="your-client-secret"
 
 # SAP AI Core API Configuration
 AICORE_BASE_URL=https://your-ai-api.example.com
-AICORE_DEPLOYMENT_URL=https://your-ai-api.example.com/v2/inference/deployments/your-deployment-id
 
 # Server Configuration (Optional)
 PORT=3001
