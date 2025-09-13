@@ -4,6 +4,10 @@ A simple proxy server that provides OpenAI-compatible API access to SAP AI Core'
 
 ---
 
+## 📋 Prerequisites
+
+**New to development?** See [HOW_TO_INSTALL.md](./HOW_TO_INSTALL.md) for a complete guide to setting up your development environment (Node.js, Git, and required tools).
+
 ## ⚡ Quick Start
 
 ```bash
@@ -35,13 +39,15 @@ The proxy will be available at `http://localhost:3001`
 Create a `.env` file from the provided `.env.example` template with your SAP AI Core credentials:
 
 ```env
+# ------- Required Configurations -------
+
 # SAP AI Core Authentication Configuration
-AICORE_AUTH_URL=https://your-auth.example.com
 AICORE_CLIENT_ID="your-client-id"
 AICORE_CLIENT_SECRET="your-client-secret"
-
-# SAP AI Core API Configuration
+AICORE_AUTH_URL=https://your-auth.example.com
 AICORE_BASE_URL=https://your-ai-api.example.com
+
+# ------- Optional Configurations -------
 
 # Server Configuration (Optional)
 PORT=3001
@@ -115,11 +121,17 @@ Simply configure these clients with the proxy settings above to access SAP AI Co
 
 **Note:**
 If you get this...
+
 ```shell
 /Users/I529037/dev/sap-aicore-proxy/node_modules/finalhandler/index.js:14
 var debug = require('debug')('finalhandler')
 ```
-...you need to update `node`.
+
+...you need to update `node`. 
+
+```shell
+
+```
 
 
 ### Model Management
@@ -286,7 +298,7 @@ For alternative implementations and approaches to SAP AI Core integration, you m
 
 ## 📖 Detailed Documentation
 
-See [CLAUDE.md](./CLAUDE.md) for comprehensive documentation including:
+See [CLAUDE.md](./CLAUDE.md) for comprehensive technical documentation including:
 
 - Technical implementation details
 - Troubleshooting guide
