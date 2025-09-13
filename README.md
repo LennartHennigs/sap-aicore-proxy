@@ -36,7 +36,6 @@ Create a `.env` file from the provided `.env.example` template with your SAP AI 
 
 ```env
 # SAP AI Core Authentication Configuration
-ACCESS_TOKEN_URL=https://your-auth.example.com
 AICORE_AUTH_URL=https://your-auth.example.com
 AICORE_CLIENT_ID="your-client-id"
 AICORE_CLIENT_SECRET="your-client-secret"
