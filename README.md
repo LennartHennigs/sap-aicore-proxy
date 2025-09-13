@@ -19,6 +19,10 @@ cd sap-aicore-proxy
 npm ci
 
 # 3. Configure environment
+# Option A: If you have ai-core-key.json from SAP AI Core
+./scripts/generate-env.sh ai-core-key.json
+
+# Option B: Manual configuration
 cp .env.example .env   # copy from example and edit with your SAP AI Core credentials
 
 # 4. Start proxy server
