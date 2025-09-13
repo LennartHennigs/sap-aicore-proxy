@@ -35,22 +35,28 @@ The proxy will be available at `http://localhost:3001`
 Create a `.env` file from the provided `.env.example` template with your SAP AI Core credentials:
 
 ```env
-# SAP AI Core Configuration (Required)
-AICORE_AUTH_URL=https://your-auth-url.hana.ondemand.com
+# SAP AI Core Authentication Configuration
+ACCESS_TOKEN_URL=https://your-auth.example.com
+AICORE_AUTH_URL=https://your-auth.example.com
 AICORE_CLIENT_ID="your-client-id"
 AICORE_CLIENT_SECRET="your-client-secret"
-AICORE_BASE_URL=https://api.ai.your-region.aws.ml.hana.ondemand.com
 
-# Server Configuration (Optional - defaults provided)
-PORT=3001                    # Server port
-HOST=localhost              # Server host
-TOKEN_EXPIRY_BUFFER=60      # Token refresh buffer in seconds
-CORS_ORIGIN=*              # CORS origin policy
+# SAP AI Core API Configuration
+AICORE_BASE_URL=https://your-ai-api.example.com
+AICORE_DEPLOYMENT_URL=https://your-ai-api.example.com/v2/inference/deployments/your-deployment-id
+
+# Server Configuration (Optional)
+PORT=3001
+HOST=localhost
+TOKEN_EXPIRY_BUFFER=60
+DEFAULT_TOKEN_EXPIRY=3600
+
+# CORS Configuration (Optional)
+CORS_ORIGIN=*
 
 # Model Configuration (Optional)
 DEFAULT_MODEL=gpt-5-nano
 DEFAULT_MAX_TOKENS=1000
-DEFAULT_TOKEN_EXPIRY=3600
 
 # Model Pool Configuration (Optional)
 MODEL_POOL_MAX_IDLE_TIME=1800000
@@ -59,16 +65,16 @@ MODEL_POOL_CLEANUP_INTERVAL=300000
 # Provider Configuration (Optional)
 SAP_AICORE_PROVIDER_PREFIX=sap-aicore
 
+# Body Size Limits (Optional)
+BODY_LIMIT_JSON=50mb
+BODY_LIMIT_URLENCODED=50mb
+BODY_LIMIT_RAW=50mb
+
 # API Endpoint Defaults (Optional)
 ANTHROPIC_DEFAULT_VERSION=bedrock-2023-05-31
 ANTHROPIC_DEFAULT_ENDPOINT=/invoke
 GEMINI_DEFAULT_ENDPOINT=/models/gemini-2.5-flash:generateContent
 GENERIC_DEFAULT_ENDPOINT=
-
-# Body Size Limits (Optional)
-BODY_LIMIT_JSON=50mb
-BODY_LIMIT_URLENCODED=50mb
-BODY_LIMIT_RAW=50mb
 ```
 
 **Important**:
