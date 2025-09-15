@@ -5,7 +5,37 @@ All notable changes to the SAP AI Core Proxy project will be documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased] - 2025-09-11
+## [Unreleased] - 2025-09-15
+
+### 🔧 SAP AI Core Provider Integration Fix
+
+### Fixed
+
+#### Critical Bug: SAP AI Core Streaming Error
+
+- **Problem**: "SAP AI Core Deployment URL setting is missing" error during streaming requests
+- **Root Cause**: Incorrect usage of `@ai-foundry/sap-aicore-provider` package
+  - Was using deprecated `sapAiCore` function directly
+  - Provider was not receiving proper deployment URL configuration
+  - Authentication was being duplicated instead of reusing existing token manager
+- **Solution** in `src/handlers/model-pool.ts`:
+  - Updated to use `createSapAiCore` configuration function instead of direct `sapAiCore` call
+  - Integrated with existing `tokenManager` to reuse OAuth authentication logic
+  - Added proper deployment URL and authorization header configuration
+  - Set fallback environment variable `AICORE_DEPLOYMENT_URL` for provider compatibility
+- **Testing**: ✅ Both streaming and non-streaming requests now work correctly
+- **Impact**: Resolves critical streaming functionality that was preventing proper AI model responses
+
+#### Validation Results
+
+- **Streaming Requests**: ✅ Working with real-time token streaming
+- **Non-streaming Requests**: ✅ Working with proper JSON responses  
+- **Authentication**: ✅ Proper token management and reuse
+- **Model Pool**: ✅ Instances created and managed correctly
+
+---
+
+## [2025-09-11] - Configuration Validation & Vision Enhancement Update
 
 ### 🔧 Configuration Validation & Vision Enhancement Update
 
