@@ -1,8 +1,9 @@
-import { sapAiCore } from '@ai-foundry/sap-aicore-provider';
+import { createSapAiCore } from '@ai-foundry/sap-aicore-provider';
 import { aisdk } from '../lib/ai-sdk.js';
 import { Agent, setTracingDisabled } from '@openai/agents';
 import { modelRouter } from '../models/model-router.js';
 import { config } from '../config/app-config.js';
+import { tokenManager } from '../auth/token-manager.js';
 
 export interface PooledModel {
   agent: Agent;
@@ -42,6 +43,23 @@ class ModelPool {
 
     console.log(`🔧 Creating new model instance for: ${modelName}`);
     
+    // Build deployment URL for SAP AI Core
+    const deploymentUrl = `${config.aicore.baseUrl}/v2/inference/deployments/${modelConfig.deploymentId}`;
+    
+    // Get access token using our existing token manager
+    const accessToken = await tokenManager.getAccessToken();
+    
+    // Configure SAP AI Core provider with deployment URL and authorization header
+    const sapAiCore = createSapAiCore({
+      deploymentUrl: deploymentUrl,
+      headers: {
+        'Authorization': `Bearer ${accessToken}`
+      }
+    });
+    
+    // Set environment variable as fallback for the provider
+    process.env.AICORE_DEPLOYMENT_URL = deploymentUrl;
+    
     const providerModelName = `${config.models.providers.sapAiCore.prefix}/${modelName}`;
     const model = aisdk(sapAiCore(providerModelName));
     
@@ -59,7 +77,7 @@ class ModelPool {
     };
     
     this.pool.set(modelName, pooledModel);
-    console.log(`✅ Model instance created and pooled: ${modelName}`);
+    console.log(`✅ Model instance created and pooled: ${modelName} (deployment: ${modelConfig.deploymentId})`);
     
     return agent;
   }
