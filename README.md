@@ -6,31 +6,23 @@ A simple proxy server that provides OpenAI-compatible API access to SAP AI Core'
 
 ## 📋 Prerequisites
 
-**New to development?** See [HOW_TO_INSTALL.md](./HOW_TO_INSTALL.md) for a complete guide to setting up your development environment (Node.js, Git, and required tools).
+See [HOW_TO_INSTALL.md](./HOW_TO_INSTALL.md) for a complete guide to setting up your development environment (Node.js, Git, and required tools).
 
 ## ⚡ Quick Start
 
-```bash
-# 1. Clone and enter
-git clone git@github.com:LennartHennigs/sap-aicore-proxy.git
-cd sap-aicore-proxy
-
-# 2. Install dependencies
+```
+# 1. Install dependencies
 npm ci
 
-# 3. Configure environment
-# Option A: If you have ai-core-key.json from SAP AI Core
-./scripts/generate-env.sh ai-core-key.json
+# 2. Configure environment
+cp .env.example .env   # copy from example **and edit** with your SAP AI Core credentials
 
-# Option B: Manual configuration
-cp .env.example .env   # copy from example and edit with your SAP AI Core credentials
-
-# 4. Start proxy server
+# 3. Start proxy server
 npm start
 
-# 5. Run and (Configure) a LLM client of your choice
+# 4. Run and (Configure) a LLM client of your choice
 
-# 6. Stop proxy server (when no longer needed)
+# 5. Stop proxy server (when no longer needed)
 npm stop
 ```
 
