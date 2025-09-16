@@ -58,7 +58,7 @@ Clone a repository
 
 ```shell
 git clone git@github.com:LennartHennigs/sap-aicore-proxy.git
-cd repo
+cd sap-aicore-proxy
 ```
 
 Note: If the repository is private, you’ll be prompted for credentials. In that case use an access token or credentials as required by the host.
@@ -69,13 +69,6 @@ Note: If the repository is private, you’ll be prompted for credentials. In tha
 brew install node
 ```
 
-Verify installations
-
-```shell
-git --version
-node -v
-npm -v
-```
 
 Install project dependencies (example for a Node project)
 
@@ -94,8 +87,6 @@ Verify:
 ```shell
 brew update
 brew upgrade
-node -v
-npm -v
 brew upgrade node
 npm install -g npm@latest
 ```
