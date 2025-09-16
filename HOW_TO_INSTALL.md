@@ -28,7 +28,9 @@ brew install --cask iterm2
 
 Now open iterm and continue there:
 
-`[CMD + Space] -> iTerm`
+```
+[CMD + Space] -> iTerm
+```
 
 
 ## 3. Install GIT (if not already installed via macOS)
