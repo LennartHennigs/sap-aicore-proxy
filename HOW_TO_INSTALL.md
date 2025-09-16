@@ -32,6 +32,13 @@ brew install --cask iterm2
 brew install git
 ```
 
+Login into git
+
+```shell
+git config --global user.name "[Your Name]"
+git config --global user.email "[your.email@example.com]"
+```
+
 Clone a repository using HTTP (no SSH keys)
 
 ```shell
