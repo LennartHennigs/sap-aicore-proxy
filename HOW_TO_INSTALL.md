@@ -35,15 +35,16 @@ Now open iterm and continue there:
 
 ## 3. Install GIT (if not already installed via macOS)
 
+Install the GIT command line tool
+```shell
+brew install git
+```
+
+
 Go to the place where you want to have the folder
 ```shell
 cd
 cd Documents
-```
-
-
-```shell
-brew install git
 ```
 
 Login into git
