@@ -15,7 +15,7 @@ Add Homebrew to your PATH
 (the installer will show the exact commands)
 
 ```
-follow the step show by brew
+follow the step shown by brew
 ```
 
 ## 2. Install iTerm (optional, but a sign of good taste)
