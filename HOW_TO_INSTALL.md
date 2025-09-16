@@ -26,7 +26,19 @@ Install iTerm2 via Homebrew Cask:
 brew install --cask iterm2
 ```
 
+Now open iterm and continue there:
+
+[CMD + Space] -> iTerm
+
+
 ## 3. Install GIT (if not already installed via macOS)
+
+Go to the place where you want to have the folder
+```shell
+cd
+cd Documents
+```
+
 
 ```shell
 brew install git
@@ -39,7 +51,8 @@ git config --global user.name "[Your Name]"
 git config --global user.email "[your.email@example.com]"
 ```
 
-Clone a repository using HTTP (no SSH keys)
+
+Clone a repository
 
 ```shell
 git clone git@github.com:LennartHennigs/sap-aicore-proxy.git
