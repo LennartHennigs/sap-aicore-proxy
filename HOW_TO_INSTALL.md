@@ -11,11 +11,11 @@ And I suggest to use `ìTerm`, a nice Terminal program.
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 ```
 
-Add Homebrew to your PATH (the installer will show the exact commands; typical for Apple Silicon):
+Add Homebrew to your PATH 
+(the installer will show the exact commands)
 
-```shell
-echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> ~/.zprofile
-eval "$(/opt/homebrew/bin/brew shellenv)"
+```
+follow the step show by brew
 ```
 
 ## 2. Install iTerm (optional, but a sign of good taste)
