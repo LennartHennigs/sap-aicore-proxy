@@ -18,35 +18,14 @@ Add Homebrew to your PATH
 follow the step shown by brew
 ```
 
-## 2. Install iTerm (optional, but a sign of good taste)
- 
-Install iTerm2 via Homebrew Cask:
-
-``` shell
-brew install --cask iterm2
-```
-
-Now open iterm and continue there:
-
-```
-[CMD + Space] -> iTerm
-```
-
-```
-cp .env.sample .env
-```
-
-Edit this now and add credentials
-
-
-## 3. Install GIT (if not already installed via macOS)
+## 2. Install GIT (if not already installed via macOS)
 
 Install the GIT command line tool
 ```shell
 brew install git
 ```
 
-## 4. Download the repo and unpack it
+## 3. Download the repo and unpack it
 
  -> Download the package, (insert image here)
 
@@ -56,7 +35,7 @@ cd
 cd Documents
 ```
 
-## 5. Install Node.js without nvm (via Homebrew)
+## 4. Install Node.js
 
 ```shell
 brew install node
@@ -73,7 +52,7 @@ If you need to switch Node versions later, consider using a local tool other tha
 
 Then you can continue with the config: [README.md](./README.md)
 
-### 6. Updates  – just in case
+### 5. Updates  – most likely not needed
 
 ```shell
 npm install -g npm@latest
