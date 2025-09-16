@@ -19,7 +19,7 @@ follow the step shown by brew
 ```
 
 ## 2. Install iTerm (optional, but a sign of good taste)
-
+ 
 Install iTerm2 via Homebrew Cask:
 
 ``` shell
