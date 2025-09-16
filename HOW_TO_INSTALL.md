@@ -18,7 +18,7 @@ echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> ~/.zprofile
 eval "$(/opt/homebrew/bin/brew shellenv)"
 ```
 
-## 2. Install iTerm
+## 2. Install iTerm (optional, but a sign of good taste)
 
 Install iTerm2 via Homebrew Cask:
 
