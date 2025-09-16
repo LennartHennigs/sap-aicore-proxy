@@ -32,6 +32,12 @@ Now open iterm and continue there:
 [CMD + Space] -> iTerm
 ```
 
+```
+cp .env.sample .env
+```
+
+Edit this now and add credentials
+
 
 ## 3. Install GIT (if not already installed via macOS)
 
