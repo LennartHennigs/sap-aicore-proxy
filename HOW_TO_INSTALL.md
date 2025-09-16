@@ -40,6 +40,9 @@ Install the GIT command line tool
 brew install git
 ```
 
+## 4. Download the repo and unpack it
+
+[ insert image ]
 
 Go to the place where you want to have the folder
 ```shell
@@ -47,27 +50,11 @@ cd
 cd Documents
 ```
 
-Login into git
-
-```shell
-git config --global user.name "[Your Name]"
-git config --global user.email "[your.email@example.com]"
-```
-
-
-Clone a repository
-
-```shell
-git clone git@github.com:LennartHennigs/sap-aicore-proxy.git
-cd sap-aicore-proxy
-```
-
-Note: If the repository is private, you’ll be prompted for credentials. In that case use an access token or credentials as required by the host.
-
-## 4. Install Node.js without nvm (via Homebrew)
+## 5. Install Node.js without nvm (via Homebrew)
 
 ```shell
 brew install node
+brew upgrade node
 ```
 
 Install project dependencies (example for a Node project)
@@ -80,11 +67,8 @@ If you need to switch Node versions later, consider using a local tool other tha
 
 Then you can continue with the config: [README.md](./README.md)
 
-### 5. Updates  – just in case
+### 6. Updates  – just in case
 
 ```shell
-brew update
-brew upgrade
-brew upgrade node
 npm install -g npm@latest
 ```
