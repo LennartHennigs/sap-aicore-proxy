@@ -70,7 +70,6 @@ Note: If the repository is private, you’ll be prompted for credentials. In tha
 brew install node
 ```
 
-
 Install project dependencies (example for a Node project)
 
 ```shell
@@ -79,11 +78,9 @@ npm install
 
 If you need to switch Node versions later, consider using a local tool other than nvm (e.g., Homebrew-managed Node, or a project-specific installer). This guide avoids nvm as requested.
 
-### 5. Updates  – just in case
+Then you can continue with the config: [README.md](./README.md)
 
-Go to nodejs.org and download the desired installer (LTS recommended).
-Run the installer (it updates both Node and npm).
-Verify:
+### 5. Updates  – just in case
 
 ```shell
 brew update
