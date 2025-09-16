@@ -42,7 +42,7 @@ brew install git
 
 ## 4. Download the repo and unpack it
 
-[ insert image ]
+ -> Download the package, (insert image here)
 
 Go to the place where you want to have the folder
 ```shell
