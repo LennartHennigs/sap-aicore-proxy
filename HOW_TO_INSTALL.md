@@ -1,121 +1,138 @@
 # Setting up dev tools
 
-You need to install `node`, `npm*`, `git`.
-And I suggest to use `ìTerm`, a nice Terminal program.
+You need to install `node`, `npm`, `git`.
+And I suggest to use `iTerm`, a nice Terminal program.
 
 ## 1. Install Homebrew
 
- Install Homebrew (Apple Silicon) and set up your shell environment
+Install Homebrew (Apple Silicon) and set up your shell environment
 
 ```shell
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 ```
 
-Add Homebrew to your PATH (the installer will show the exact commands; typical for Apple Silicon):
+Add Homebrew to your PATH 
+(the installer will show the exact commands)
 
-```shell
-echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> ~/.zprofile
-eval "$(/opt/homebrew/bin/brew shellenv)"
+```
+follow the step shown by brew
 ```
 
-## 2. Install iTerm
+## 2. Install GIT (if not already installed via macOS)
 
-Install iTerm2 via Homebrew Cask:
-
-``` shell
-brew install --cask iterm2
-```
-
-## 3. Install GIT (if not already installed via macOS)
-
+Install the GIT command line tool
 ```shell
 brew install git
 ```
 
-Clone a repository using HTTP (no SSH keys)
+## 3. Download the repo and unpack it
 
+![download repo](./images/code_download.png)
+
+Go to the place where you want to have the folder
 ```shell
-git clone  git clone git@github.com:LennartHennigs/sap-aicore-proxy.git sein
-cd repo
+cd
+cd Documents
 ```
 
-Note: If the repository is private, you’ll be prompted for credentials. In that case use an access token or credentials as required by the host.
-
-## 4. Install Node.js without nvm (via Homebrew)
+## 4. Install Node.js
 
 ```shell
 brew install node
+brew upgrade node
 ```
 
-Verify installations
-
+Verify installations:
 ```shell
-git --version
 node -v
 npm -v
+git --version
 ```
 
-Install project dependencies (example for a Node project)
+## 5. Project Setup
+
+Once you have the project folder, navigate to it and install dependencies:
 
 ```shell
+cd sap-aicore-proxy
 npm install
 ```
 
-If you need to switch Node versions later, consider using a local tool other than nvm (e.g., Homebrew-managed Node, or a project-specific installer). This guide avoids nvm as requested.
+## 6. Configure Environment
 
-### 5. Updates  – just in case
+You have two options for configuration:
 
-Go to nodejs.org and download the desired installer (LTS recommended).
-Run the installer (it updates both Node and npm).
-Verify:
+**Option A: Automatic configuration (if you have ai-core-key.json from SAP AI Core)**
+```shell
+./scripts/generate-env.sh ai-core-key.json
+```
+
+**Option B: Manual configuration**
+```shell
+cp .env.example .env
+```
+
+Next, edit .env file with your SAP AI Core credentials
+
+
+```env
+# ------- Required Configurations -------
+
+# SAP AI Core Authentication Configuration
+AICORE_CLIENT_ID="your-client-id"
+AICORE_CLIENT_SECRET="your-client-secret"
+AICORE_AUTH_URL=https://your-auth.example.com
+AICORE_BASE_URL=https://your-ai-api.example.com
+
+# ------- Optional Configurations -------
+
+# Server Configuration (Optional)
+PORT=3001
+HOST=localhost
+TOKEN_EXPIRY_BUFFER=60
+DEFAULT_TOKEN_EXPIRY=3600
+
+# CORS Configuration (Optional)
+CORS_ORIGIN=*
+
+# Model Configuration (Optional)
+DEFAULT_MODEL=gpt-5-nano
+DEFAULT_MAX_TOKENS=1000
+
+# Model Pool Configuration (Optional)
+MODEL_POOL_MAX_IDLE_TIME=1800000
+MODEL_POOL_CLEANUP_INTERVAL=300000
+
+# Provider Configuration (Optional)
+SAP_AICORE_PROVIDER_PREFIX=sap-aicore
+
+# Body Size Limits (Optional)
+BODY_LIMIT_JSON=50mb
+BODY_LIMIT_URLENCODED=50mb
+BODY_LIMIT_RAW=50mb
+
+# API Endpoint Defaults (Optional)
+ANTHROPIC_DEFAULT_VERSION=bedrock-2023-05-31
+ANTHROPIC_DEFAULT_ENDPOINT=/invoke
+GEMINI_DEFAULT_ENDPOINT=/models/gemini-2.5-flash:generateContent
+GENERIC_DEFAULT_ENDPOINT=
+```
+
+**Important**:
+
+- Client ID should be in double quotes
+- Client secret should be in single quotes to handle special characters
+- All server configuration is optional with sensible defaults
+- **Configuration Validation**: The server validates all configurations on startup and reports any issues
+
+---
+
+
+
+### Updates – most likely not needed
 
 ```shell
-brew update
-brew upgrade
-node -v
-npm -v
-brew upgrade node
 npm install -g npm@latest
 ```
 
-## Quick reference commands (all in one glance)
-
-- Install Homebrew and set PATH:
-
-    ```shell
-    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-    echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> ~/.zprofile
-    eval "$(/opt/homebrew/bin/brew shellenv)"
-    ```
-
-- Git:
-
-    ```shell
-    brew install git
-    git clone http://example.com/owner/repo.git
-    ```
-
-- Node:
-
-    ```shell
-    brew install node
-    node -v
-    npm -v
-    ```
-
-- Project setup:
-
-    ```shell
-    cd repo
-    npm install
-    ```
-
-- Updates
-
-    ```shell
-    brew update
-    brew upgrade
-    node -v
-    npm -v
-    npm install -g npm@latest
-    ```
+If you need to switch Node versions later, consider using a local tool other than nvm (e.g., Homebrew-managed Node, or a project-specific installer). This guide avoids nvm as requested.
