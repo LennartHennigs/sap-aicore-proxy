@@ -21,6 +21,7 @@ follow the step shown by brew
 ## 2. Install GIT (if not already installed via macOS)
 
 Install the GIT command line tool
+
 ```shell
 brew install git
 ```
@@ -29,7 +30,8 @@ brew install git
 
 ![download repo](./images/code_download.png)
 
-Go to the place where you want to have the folder
+Go to the place where you want to have the folder:
+
 ```shell
 cd
 cd Documents
@@ -43,6 +45,7 @@ brew upgrade node
 ```
 
 Verify installations:
+
 ```shell
 node -v
 npm -v
@@ -63,17 +66,18 @@ npm install
 You have two options for configuration:
 
 **Option A: Automatic configuration (if you have ai-core-key.json from SAP AI Core)**
+
 ```shell
 ./scripts/generate-env.sh ai-core-key.json
 ```
 
 **Option B: Manual configuration**
+
 ```shell
 cp .env.example .env
 ```
 
 Next, edit .env file with your SAP AI Core credentials
-
 
 ```env
 # ------- Required Configurations -------
