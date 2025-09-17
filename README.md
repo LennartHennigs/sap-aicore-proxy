@@ -17,7 +17,6 @@ npm start
 
 **What `npm start` does:**
 - Launches the proxy server at `http://localhost:3001`
-- Enables model pooling for optimal performance
 - Validates configuration on startup
 - Provides OpenAI-compatible API endpoints at `/v1/*`
 
