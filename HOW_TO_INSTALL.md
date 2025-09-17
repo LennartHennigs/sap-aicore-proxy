@@ -129,20 +129,7 @@ GENERIC_DEFAULT_ENDPOINT=
 - All server configuration is optional with sensible defaults
 - **Configuration Validation**: The server validates all configurations on startup and reports any issues
 
-## 7. Start the Server
-
-```shell
-npm start
-```
-
-The proxy will be available at `http://localhost:3001`
-
-### Server Management Commands
-
-- **`npm start`** - Start the proxy server (optimized with model pooling)
-- **`npm stop`** - Stop the proxy server
-- **`npm run dev`** - Start in development mode with hot reload
-- **`curl http://localhost:3001/health`** - Check server status
+## 7. Done
 
 Then you can continue with the config: [README.md](./README.md)
 
