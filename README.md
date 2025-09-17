@@ -2,8 +2,6 @@
 
 A simple proxy server that provides OpenAI-compatible API access to SAP AI Core's AI deployed models.
 
-
-
 ## 📋 Prerequisites
 
 See [HOW_TO_INSTALL.md](./HOW_TO_INSTALL.md) for a complete installation guide.
@@ -16,6 +14,7 @@ npm start
 ```
 
 **What `npm start` does:**
+
 - Launches the proxy server at `http://localhost:3001`
 - Validates configuration on startup
 - Provides OpenAI-compatible API endpoints at `/v1/*`
@@ -68,7 +67,6 @@ Simply configure these clients with the proxy settings above to access SAP AI Co
 - `curl http://localhost:3001/health` - Check server health and model pool statistics
 - `curl http://localhost:3001/v1/models` - List available models (OpenAI-compatible)
 
-
 ### Check Model Deployment Status
 
 ```bash
@@ -107,6 +105,7 @@ This will generate `config/models.json` from all deployed models with generic pl
 AI Client → Proxy Server → [Model Pool] → SAP AI Core → AI Models
                         ↘ [Direct API] ↗
 ```
+
 ## 📖 Detailed Documentation
 
 See [CLAUDE.md](./CLAUDE.md) for comprehensive technical documentation including:
@@ -121,4 +120,3 @@ See [CLAUDE.md](./CLAUDE.md) for comprehensive technical documentation including
 For alternative implementations and approaches to SAP AI Core integration, you may also be interested in:
 
 - **[SAP AI Core Proxy](https://github.com/kaimerklein/sap-ai-core-proxy)** - Another SAP AI Core proxy implementation with different architectural choices
-

@@ -11,10 +11,10 @@ Install Homebrew (Apple Silicon) and set up your shell environment
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 ```
 
-Add Homebrew to your PATH 
+Add Homebrew to your PATH
 (the installer will show the exact commands)
 
-```
+``` shell
 follow the step shown by brew
 ```
 
@@ -65,16 +65,16 @@ npm install
 
 You have two options for configuration:
 
-**Option A: Automatic configuration (if you have ai-core-key.json from SAP AI Core)**
-
-```shell
-./scripts/generate-env.sh ai-core-key.json
-```
-
-**Option B: Manual configuration**
+### Option A: Manual configuration
 
 ```shell
 cp .env.example .env
+```
+
+### Option A: Automatic configuration (if you have ai-core-key.json from SAP AI Core)
+
+```shell
+./scripts/generate-env.sh ai-core-key.json
 ```
 
 Next, edit .env file with your SAP AI Core credentials
