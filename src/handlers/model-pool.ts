@@ -4,6 +4,7 @@ import { Agent, setTracingDisabled } from '@openai/agents';
 import { modelRouter } from '../models/model-router.js';
 import { config } from '../config/app-config.js';
 import { tokenManager } from '../auth/token-manager.js';
+import { SecureLogger } from '../utils/secure-logger.js';
 
 export interface PooledModel {
   agent: Agent;
