@@ -87,7 +87,6 @@ This will generate `config/models.json` from all deployed models with generic pl
 ## 🚀 Automatic Deployment ID Discovery
 
 The proxy automatically discovers deployment IDs from SAP AI Core at startup, eliminating the need for manual configuration.
-```
 
 ### Environment Variable Overrides
 
