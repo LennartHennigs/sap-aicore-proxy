@@ -1,8 +1,9 @@
-import { sapAiCore } from '@ai-foundry/sap-aicore-provider';
+import { createSapAiCore } from '@ai-foundry/sap-aicore-provider';
 import { aisdk } from '../lib/ai-sdk.js';
 import { Agent, setTracingDisabled } from '@openai/agents';
 import { modelRouter } from '../models/model-router.js';
 import { config } from '../config/app-config.js';
+import { tokenManager } from '../auth/token-manager.js';
 import { SecureLogger } from '../utils/secure-logger.js';
 
 export interface PooledModel {
@@ -20,14 +21,14 @@ class ModelPool {
   constructor() {
     // Disable tracing globally
     setTracingDisabled(true);
-    
+
     // Start cleanup timer
     this.startCleanup();
   }
 
   async getModel(modelName: string): Promise<Agent> {
     const existing = this.pool.get(modelName);
-    
+
     if (existing) {
       // Update usage stats
       existing.lastUsed = Date.now();
@@ -42,10 +43,27 @@ class ModelPool {
     }
 
     SecureLogger.logModelPoolOperation('Creating new model instance', modelName);
-    
+
+    // Build deployment URL for SAP AI Core
+    const deploymentUrl = `${config.aicore.baseUrl}/v2/inference/deployments/${modelConfig.deploymentId}`;
+
+    // Get access token using our existing token manager
+    const accessToken = await tokenManager.getAccessToken();
+
+    // Configure SAP AI Core provider with deployment URL and authorization header
+    const sapAiCore = createSapAiCore({
+      deploymentUrl: deploymentUrl,
+      headers: {
+        'Authorization': `Bearer ${accessToken}`
+      }
+    });
+
+    // Set environment variable as fallback for the provider
+    process.env.AICORE_DEPLOYMENT_URL = deploymentUrl;
+
     const providerModelName = `${config.models.providers.sapAiCore.prefix}/${modelName}`;
     const model = aisdk(sapAiCore(providerModelName));
-    
+
     const agent = new Agent({
       name: `SAP AI Assistant - ${modelName}`,
       instructions: 'You are a helpful AI assistant.',
@@ -58,16 +76,16 @@ class ModelPool {
       lastUsed: Date.now(),
       requestCount: 1
     };
-    
+
     this.pool.set(modelName, pooledModel);
     SecureLogger.logModelConfigured(modelName);
-    
+
     return agent;
   }
 
   async getModelForStreaming(modelName: string): Promise<any> {
     const existing = this.pool.get(modelName);
-    
+
     if (existing) {
       // Update usage stats
       existing.lastUsed = Date.now();
@@ -84,16 +102,16 @@ class ModelPool {
   getPoolStats(): { [modelName: string]: { requestCount: number; lastUsed: string; idleTime: string } } {
     const stats: { [modelName: string]: { requestCount: number; lastUsed: string; idleTime: string } } = {};
     const now = Date.now();
-    
-    for (const [modelName, pooledModel] of this.pool.entries()) {
+
+    this.pool.forEach((pooledModel, modelName) => {
       const idleTime = now - pooledModel.lastUsed;
       stats[modelName] = {
         requestCount: pooledModel.requestCount,
         lastUsed: new Date(pooledModel.lastUsed).toISOString(),
         idleTime: `${Math.round(idleTime / 1000)}s`
       };
-    }
-    
+    });
+
     return stats;
   }
 
@@ -106,15 +124,15 @@ class ModelPool {
   private cleanup(): void {
     const now = Date.now();
     const toRemove: string[] = [];
-    
-    for (const [modelName, pooledModel] of this.pool.entries()) {
+
+    this.pool.forEach((pooledModel, modelName) => {
       const idleTime = now - pooledModel.lastUsed;
-      
+
       if (idleTime > this.maxIdleTime) {
         toRemove.push(modelName);
       }
-    }
-    
+    });
+
     if (toRemove.length > 0) {
       SecureLogger.logModelPoolOperation(`Cleaning up ${toRemove.length} idle model instances`);
       for (const modelName of toRemove) {
@@ -125,7 +143,7 @@ class ModelPool {
 
   preloadModels(modelNames: string[]): void {
     SecureLogger.logModelPoolOperation(`Preloading ${modelNames.length} models`);
-    
+
     // Preload models asynchronously without waiting
     modelNames.forEach(async (modelName) => {
       try {
@@ -143,7 +161,7 @@ class ModelPool {
       clearInterval(this.cleanupTimer);
       this.cleanupTimer = null;
     }
-    
+
     SecureLogger.logModelPoolOperation(`Shutting down model pool with ${this.pool.size} instances`);
     this.pool.clear();
   }

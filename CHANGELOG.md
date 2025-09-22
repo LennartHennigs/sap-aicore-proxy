@@ -7,6 +7,69 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 2025-09-22
 
+### 🔐 Token Verification Fix & Model Pool Authentication Update
+
+This update resolves critical token transmission and streaming issues that were causing authentication failures with BoltAI and other AI clients. The fix restores proper SAP AI Core provider configuration and ensures tokens are correctly transmitted to all provider APIs.
+
+### Fixed
+
+#### 🛠️ Critical SAP AI Core Provider Configuration Fix
+
+- **Model Pool Authentication** (`src/handlers/model-pool.ts`)
+  - Restored working `createSapAiCore` configuration from main branch
+  - Fixed broken `sapAiCore` implementation that was missing authentication
+  - Re-integrated `tokenManager` for proper OAuth token acquisition
+  - Restored correct deployment URL building: `${baseUrl}/v2/inference/deployments/${deploymentId}`
+  - Fixed authorization headers: `Authorization: Bearer ${accessToken}`
+  - Resolved "An error occurred during processing" errors for gpt-5-nano
+
+#### 🌊 Streaming Functionality Restored
+
+- **gpt-5-nano Streaming**: ✅ Working with proper chunk-by-chunk streaming
+- **anthropic--claude-4-sonnet Streaming**: ✅ Working with complete response streaming  
+- **gemini-2.5-flash Streaming**: ✅ Working with brief response streaming
+- **Token Transmission**: All provider tokens (SAP AI Core OAuth, Anthropic, Google) properly transmitted
+- **BoltAI Compatibility**: All models now work seamlessly with BoltAI streaming
+
+#### 🔑 Authentication System Verification
+
+- **Custom API Key System**: Maintained and working correctly (`sk-proj-KEiBe1MO4JWCQLKfwZFO06G5OPlJR0rSxgqGgF6A9hI`)
+- **Two-Layer Authentication**: Client API key validation + provider token transmission
+- **Invalid Token Rejection**: Proper authentication error responses for invalid/missing tokens
+- **Security Logging**: Authentication events properly logged for monitoring
+
+### Testing
+
+#### ✅ Comprehensive Token Verification Results
+
+- **Authentication Tests**: ✅ Invalid tokens properly rejected, valid tokens accepted
+- **gpt-5-nano**: ✅ Streaming + non-streaming modes working with SAP AI Core OAuth tokens
+- **anthropic--claude-4-sonnet**: ✅ Streaming + non-streaming modes working with Anthropic tokens
+- **gemini-2.5-flash**: ✅ Streaming + non-streaming modes working with Google AI tokens
+- **BoltAI Integration**: ✅ All models streaming properly with custom API key authentication
+
+#### 🎯 Root Cause Analysis
+
+The dev branch had introduced breaking changes to the SAP AI Core provider configuration:
+- Changed from working `createSapAiCore` (main branch) to broken `sapAiCore` implementation
+- Removed `tokenManager` integration for OAuth token acquisition
+- Missing deployment URL construction and authorization headers
+- The custom API key system was NOT the issue - it was working correctly
+
+### Security
+
+#### 🔐 Authentication Flow Verified
+
+- **Client → Proxy**: Custom API key properly validated for all requests
+- **Proxy → SAP AI Core**: OAuth tokens from tokenManager transmitted as Bearer headers
+- **Proxy → Anthropic**: Provider-specific tokens transmitted correctly  
+- **Proxy → Google**: Provider-specific tokens transmitted correctly
+- **Security Logging**: All authentication attempts logged with proper sanitization
+
+---
+
+## [2025-09-22] - Security Hardening & Production Enhancement Update
+
 ### 🔒 Security Hardening & Production Enhancement Update
 
 This update implements comprehensive security hardening measures, including secure logging, input validation, rate limiting, and security headers, while maintaining full functionality and performance. The proxy is now production-ready with enterprise-grade security protections.

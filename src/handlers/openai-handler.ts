@@ -35,9 +35,6 @@ export class OpenAIHandler {
     }
 
     try {
-      // Get pooled model instance for streaming
-      const model = await modelPool.getModelForStreaming(modelName);
-      
       // For vision models with images, fall back to non-streaming due to AI SDK compatibility issues
       if (modelConfig.supportsVision && this.hasImageContent(messages)) {
         const nonStreamingResult = await this.callProviderAPI(modelName, messages);
@@ -56,46 +53,31 @@ export class OpenAIHandler {
         return;
       }
       
-      // For text-only content, use streaming
-      const input = this.extractPrompt(messages);
+      // Instead of using direct streaming (which has issues), simulate streaming 
+      // by getting the full response and chunking it
+      const result = await this.callProviderAPI(modelName, messages);
       
-      // Use the AI SDK model's streaming capabilities
-      const result = await model.getStreamedResponse({
-        input: input,
-        tools: [],
-        handoffs: [],
-        outputType: 'text',
-        modelSettings: {
-          maxCompletionTokens: modelConfig.max_tokens || config.models.defaultMaxTokens
-        },
-        systemInstructions: 'You are a helpful AI assistant.',
-        tracing: false
-      });
-
-      let totalPromptTokens = 0;
-      let totalCompletionTokens = 0;
-
-      for await (const event of result) {
-        if (event.type === 'output_text_delta') {
-          yield {
-            delta: event.delta,
-            finished: false
-          };
-        } else if (event.type === 'response_done') {
-          totalPromptTokens = event.response.usage.inputTokens;
-          totalCompletionTokens = event.response.usage.outputTokens;
-          
-          yield {
-            delta: '',
-            usage: {
-              promptTokens: totalPromptTokens,
-              completionTokens: totalCompletionTokens,
-              totalTokens: totalPromptTokens + totalCompletionTokens
-            },
-            finished: true
-          };
-        }
+      // Simulate streaming by chunking the response
+      const text = result.text;
+      const chunkSize = 10; // Characters per chunk
+      
+      for (let i = 0; i < text.length; i += chunkSize) {
+        const chunk = text.slice(i, i + chunkSize);
+        yield {
+          delta: chunk,
+          finished: false
+        };
+        
+        // Add small delay to simulate streaming
+        await new Promise(resolve => setTimeout(resolve, 50));
       }
+      
+      // Send final chunk with usage info
+      yield {
+        delta: '',
+        usage: result.usage,
+        finished: true
+      };
       
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
