@@ -503,17 +503,22 @@ app.get('/v1/models', (req, res) => {
 });
 
 // Start server
-const server = app.listen(config.server.port, config.server.host, () => {
+const server = app.listen(config.server.port, config.server.host, async () => {
   console.log(`🚀 SAP AI Core proxy running at http://${config.server.host}:${config.server.port}`);
   
   // Validate all model configurations on startup
-  const validation = modelRouter.validateAllModels();
-  if (!validation.isValid) {
-    console.error('❌ Model configuration validation failed:');
-    validation.errors.forEach(error => console.error(`   • ${error}`));
-    console.error('⚠️ Server will continue but some models may not work correctly');
-  } else {
-    console.log('✅ All model configurations validated successfully');
+  try {
+    const validation = await modelRouter.validateAllModels();
+    if (!validation.isValid) {
+      console.error('❌ Model configuration validation failed:');
+      validation.errors.forEach(error => console.error(`   • ${error}`));
+      console.error('⚠️ Server will continue but some models may not work correctly');
+    } else {
+      console.log('✅ All model configurations validated successfully');
+    }
+  } catch (error) {
+    console.error('❌ Failed to validate model configurations:', error);
+    console.error('⚠️ Server will continue but models may not work correctly');
   }
   
   console.log(`📡 Configure your AI client with:`);

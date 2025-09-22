@@ -1,8 +1,9 @@
 import fs from 'fs';
 import path from 'path';
+import { deploymentDiscovery } from '../services/deployment-discovery';
 
 export interface ModelConfig {
-  deploymentId: string;
+  deploymentId?: string;
   provider: string;
   supportsStreaming: boolean;
   supportsVision?: boolean;
@@ -24,6 +25,8 @@ export interface ModelsConfiguration {
 class ModelRouter {
   private config!: ModelsConfiguration; // Definite assignment assertion since loadConfiguration() is called in constructor
   private configPath: string;
+  private deploymentIds: Map<string, string> = new Map(); // modelName -> deploymentId
+  private initialized: boolean = false;
 
   constructor() {
     this.configPath = path.join(process.cwd(), 'config', 'models.json');
@@ -41,7 +44,14 @@ class ModelRouter {
   }
 
   getModelConfig(modelName: string): ModelConfig | null {
-    return this.config.models[modelName] || null;
+    const config = this.config.models[modelName];
+    if (!config) return null;
+
+    // Return a copy with the discovered deploymentId
+    return {
+      ...config,
+      deploymentId: config.deploymentId || this.deploymentIds.get(modelName)
+    };
   }
 
   isProviderSupported(modelName: string): boolean {
@@ -83,13 +93,7 @@ class ModelRouter {
       };
     }
 
-    // Validate required fields
-    if (!modelConfig.deploymentId) {
-      return {
-        isValid: false,
-        error: `Model '${modelName}' is missing deploymentId in configuration`
-      };
-    }
+    // Note: deploymentId validation moved to runtime discovery phase
 
     if (!modelConfig.provider) {
       return {
@@ -105,8 +109,8 @@ class ModelRouter {
       };
     }
 
-    // Validate deployment ID format (should be alphanumeric)
-    if (!/^[a-zA-Z0-9]+$/.test(modelConfig.deploymentId)) {
+    // Validate deployment ID format if present (should be alphanumeric)
+    if (modelConfig.deploymentId && !/^[a-zA-Z0-9]+$/.test(modelConfig.deploymentId)) {
       return {
         isValid: false,
         error: `Model '${modelName}' has invalid deploymentId format. Should be alphanumeric.`
@@ -132,10 +136,11 @@ class ModelRouter {
     return { isValid: true };
   }
 
-  validateAllModels(): { isValid: boolean; errors: string[] } {
+  async validateAllModels(): Promise<{ isValid: boolean; errors: string[] }> {
     const errors: string[] = [];
     const allModels = this.getAllModels();
     
+    // First validate static configuration
     for (const modelName of allModels) {
       const validation = this.validateModel(modelName);
       if (!validation.isValid && validation.error) {
@@ -145,7 +150,7 @@ class ModelRouter {
     
     // Validate that provider/direct arrays are consistent with model configurations
     for (const providerModel of this.config.providerSupportedModels) {
-      const modelConfig = this.getModelConfig(providerModel);
+      const modelConfig = this.config.models[providerModel]; // Use raw config to avoid deployment lookup
       if (!modelConfig) {
         errors.push(`Provider model '${providerModel}' listed in providerSupportedModels but not found in models configuration`);
       } else if (modelConfig.apiType !== 'provider') {
@@ -154,12 +159,33 @@ class ModelRouter {
     }
     
     for (const directModel of this.config.directApiModels) {
-      const modelConfig = this.getModelConfig(directModel);
+      const modelConfig = this.config.models[directModel]; // Use raw config to avoid deployment lookup
       if (!modelConfig) {
         errors.push(`Direct API model '${directModel}' listed in directApiModels but not found in models configuration`);
       } else if (modelConfig.apiType !== 'direct') {
         errors.push(`Model '${directModel}' is in directApiModels but has apiType '${modelConfig.apiType}' instead of 'direct'`);
       }
+    }
+
+    // Discover deployment IDs
+    try {
+      const discoveryResult = await deploymentDiscovery.validateAllModels(allModels);
+      
+      // Store discovered deployment IDs
+      for (const modelName of discoveryResult.valid) {
+        const deploymentId = await deploymentDiscovery.getDeploymentId(modelName);
+        if (deploymentId) {
+          this.deploymentIds.set(modelName, deploymentId);
+        }
+      }
+      
+      // Add discovery errors
+      errors.push(...discoveryResult.errors);
+      
+      this.initialized = true;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      errors.push(`Failed to discover deployment IDs: ${errorMessage}`);
     }
     
     return {
@@ -168,8 +194,20 @@ class ModelRouter {
     };
   }
 
-  reloadConfiguration(): void {
+  async reloadConfiguration(): Promise<void> {
     this.loadConfiguration();
+    this.deploymentIds.clear();
+    this.initialized = false;
+    await this.validateAllModels();
+  }
+
+  isInitialized(): boolean {
+    return this.initialized;
+  }
+
+  getDeploymentId(modelName: string): string | undefined {
+    const config = this.config.models[modelName];
+    return config?.deploymentId || this.deploymentIds.get(modelName);
   }
 }
 

@@ -2,7 +2,6 @@
   "comment": "SAP AI Core model configurations - https://help.sap.com/docs/sap-ai-core/sap-ai-core-service-guide/consume-generative-ai-models-using-sap-ai-core?locale=en-US",
   "models": {
     "gpt-5-nano": {
-      "deploymentId": "d0004379cc65d2ad",
       "provider": "sap-aicore",
       "supportsStreaming": true,
       "supportsVision": true,
@@ -10,7 +9,6 @@
       "description": "OpenAI GPT-5 nano model via SAP AI Core provider with vision support"
     },
     "anthropic--claude-4-sonnet": {
-      "deploymentId": "d621b6092670b20d",
       "provider": "anthropic",
       "supportsStreaming": false,
       "supportsVision": true,
@@ -22,7 +20,6 @@
       "description": "Anthropic Claude 4 Sonnet via direct SAP AI Core API"
     },
     "gemini-2.5-flash": {
-      "deploymentId": "de58d81592f96732",
       "provider": "google",
       "supportsStreaming": false,
       "supportsVision": false,
