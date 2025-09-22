@@ -24,7 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Deployment ID Overrides** in `.env.example`
   - `GPT_5_NANO_DEPLOYMENT_ID` - Override for GPT-5 nano deployment
-  - `ANTHROPIC_CLAUDE_4_SONNET_DEPLOYMENT_ID` - Override for Claude 4 Sonnet deployment  
+  - `ANTHROPIC_CLAUDE_4_SONNET_DEPLOYMENT_ID` - Override for Claude 4 Sonnet deployment
   - `GEMINI_2_5_FLASH_DEPLOYMENT_ID` - Override for Gemini 2.5 Flash deployment
   - Priority: env vars → auto-discovered IDs → config fallback
 
@@ -460,6 +460,7 @@ This update represents a complete architectural refactoring focused on eliminati
 #### Environment Variables
 
 Add new optional configuration variables to your `.env` file:
+
 ```env
 # Server Configuration (Optional - defaults provided)
 PORT=3001

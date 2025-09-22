@@ -78,6 +78,7 @@ interface DeploymentDiscoveryService {
    - Caches results for 5-minute intervals
 
 2. **Environment Variable Priority**:
+
    ```bash
    # Check environment override first
    GPT_5_NANO_DEPLOYMENT_ID=custom-id
@@ -87,6 +88,7 @@ interface DeploymentDiscoveryService {
    ```
 
 3. **Intelligent Mapping**:
+
    ```typescript
    // Maps SAP AI Core model names to proxy model names
    const modelNameMapping = {
@@ -178,6 +180,7 @@ if (modelRouter.useDirectAPI(model)) {
 ### Adding New Models
 
 1. **Update Configuration** (deployment ID is now optional):
+
 ```json
 // config/models.json
 {
@@ -202,6 +205,7 @@ if (modelRouter.useDirectAPI(model)) {
 ```
 
 3. **Optional Environment Override**:
+
 ```bash
 # .env file (optional for specific deployments)
 NEW_MODEL_DEPLOYMENT_ID=your-specific-deployment-id
