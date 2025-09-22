@@ -5,6 +5,56 @@ All notable changes to the SAP AI Core Proxy project will be documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.1] - 2025-09-22
+
+### 🔧 Rate Limiting Improvements
+
+### Fixed
+
+#### Rate Limiting Configuration Issues
+
+- **Problem**: Overly restrictive rate limits causing "Rate limit exceeded" errors during normal usage
+  - General endpoints limited to only 100 requests per 15 minutes
+  - AI endpoints limited to only 20 requests per 5 minutes
+  - Health and models endpoints subject to rate limiting during development
+
+- **Solution**: Adjusted rate limiting to be more development and production friendly
+  - **General rate limit**: Increased from 100 to 1000 requests per 15-minute window
+  - **AI rate limit**: Increased from 20 to 100 requests per 5-minute window
+  - **Health endpoint exemption**: `/health` endpoint now exempt from rate limiting
+  - **Models endpoint exemption**: `/v1/models` endpoint now exempt from rate limiting
+
+#### Enhanced Rate Limiting Coverage
+
+- **Extended Protection** to all AI endpoints
+  - Added rate limiting to Claude native API (`/v1/messages`)
+  - Added rate limiting to Gemini native API (`/v1/models/:model:generateContent`)
+  - Consistent protection across all API formats
+
+#### Updated Configuration
+
+- **Environment Variables** in `.env.example`
+  - Updated `RATE_LIMIT_MAX_REQUESTS=1000` (increased from 100)
+  - Updated `AI_RATE_LIMIT_MAX_REQUESTS=100` (increased from 20)
+  - Documentation updated to reflect new defaults
+
+### Benefits
+
+- **Development Friendly**: Higher limits prevent rate limiting during development and testing
+- **Production Ready**: Still provides DoS protection with reasonable limits
+- **Health Monitoring**: Health checks no longer subject to rate limiting
+- **Consistent Protection**: All AI endpoints now have appropriate rate limiting
+
+### Example Rate Limits (New)
+
+```bash
+# General endpoints: 1000 requests per 15 minutes
+# AI endpoints: 100 requests per 5 minutes
+# Health/Models endpoints: No rate limiting (exempt)
+```
+
+---
+
 ## [1.1.0] - 2025-09-22
 
 ### 🌐 Native API Endpoints Support
