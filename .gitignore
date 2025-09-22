@@ -15,6 +15,7 @@ vite.config.ts.timestamp*
 # dotenv environment variable files
 .env
 .env.dev
+.env.apikey
 .env.dev.local
 .env.test.local
 .env.production.local
