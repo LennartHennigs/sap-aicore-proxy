@@ -50,7 +50,7 @@ app.use(cors({
 // Rate limiting
 const generalLimiter = rateLimit({
   windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000', 10), // 15 minutes
-  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '100', 10), // 100 requests per window
+  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '1000', 10), // Increased from 100 to 1000 requests per window
   message: {
     error: {
       message: 'Too many requests, please try again later',
@@ -59,6 +59,10 @@ const generalLimiter = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
+  skip: (req) => {
+    // Skip rate limiting for health checks and models endpoint to prevent development issues
+    return req.path === '/health' || req.path === '/v1/models';
+  },
   handler: (req, res) => {
     SecureLogger.logRateLimitHit(req.ip, req.path);
     res.status(429).json({
@@ -73,7 +77,7 @@ const generalLimiter = rateLimit({
 // Stricter rate limiting for AI completion endpoints
 const aiLimiter = rateLimit({
   windowMs: parseInt(process.env.AI_RATE_LIMIT_WINDOW_MS || '300000', 10), // 5 minutes
-  max: parseInt(process.env.AI_RATE_LIMIT_MAX_REQUESTS || '20', 10), // 20 AI requests per window
+  max: parseInt(process.env.AI_RATE_LIMIT_MAX_REQUESTS || '100', 10), // Increased from 20 to 100 AI requests per window
   message: {
     error: {
       message: 'AI request rate limit exceeded, please try again later',
@@ -96,6 +100,8 @@ const aiLimiter = rateLimit({
 // Apply rate limiting
 app.use(generalLimiter);
 app.use('/v1/chat/completions', aiLimiter);
+app.use('/v1/messages', aiLimiter);
+app.use('/v1/models/:model\\:generateContent', aiLimiter);
 
 // Configure body parsers with increased limits for file uploads
 app.use(express.json({ 
