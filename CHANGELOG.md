@@ -5,7 +5,66 @@ All notable changes to the SAP AI Core Proxy project will be documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased] - 2025-09-15
+## [Unreleased] - 2025-09-22
+
+### 🚀 Automatic Deployment ID Discovery
+
+### Added
+
+#### Dynamic Deployment ID Discovery System
+
+- **Auto-Discovery Service** in `src/services/deployment-discovery.ts`
+  - Automatically discovers deployment IDs from SAP AI Core API at startup
+  - Maps deployed models to proxy configuration using model names
+  - Implements intelligent caching with 5-minute refresh interval
+  - Supports environment variable overrides for specific deployments
+  - Graceful fallback handling for API failures
+
+#### Environment Variable Overrides
+
+- **Deployment ID Overrides** in `.env.example`
+  - `GPT_5_NANO_DEPLOYMENT_ID` - Override for GPT-5 nano deployment
+  - `ANTHROPIC_CLAUDE_4_SONNET_DEPLOYMENT_ID` - Override for Claude 4 Sonnet deployment  
+  - `GEMINI_2_5_FLASH_DEPLOYMENT_ID` - Override for Gemini 2.5 Flash deployment
+  - Priority: env vars → auto-discovered IDs → config fallback
+
+#### Enhanced Model Configuration
+
+- **Simplified Configuration** in `config/models.json`
+  - Removed hardcoded deployment IDs from all model configurations
+  - Preserved all valuable routing, endpoint, and capability metadata
+  - Made `deploymentId` optional in TypeScript interfaces
+  - Maintains backward compatibility for manual deployment ID specification
+
+### Changed
+
+#### Model Router Enhancements
+
+- **Async Initialization** in `src/models/model-router.ts`
+  - Updated validation to async pattern for deployment discovery
+  - Added deployment ID lookup methods
+  - Enhanced error handling for missing deployments
+  - Integrated caching for performance optimization
+
+#### Server Startup Process
+
+- **Startup Validation** in `src/sap-aicore-proxy.ts`
+  - Updated to handle async model validation
+  - Enhanced logging for deployment ID discovery process
+  - Improved error reporting for missing deployments
+  - Maintains server stability during discovery failures
+
+### Benefits
+
+- **Environment Agnostic**: No more environment-specific configuration files
+- **Automatic Updates**: Deployment IDs update automatically when models are redeployed
+- **Flexible Overrides**: Environment variables allow deployment-specific customization
+- **Zero Downtime**: Graceful fallback ensures service availability during API issues
+- **Simplified Maintenance**: Eliminates manual deployment ID management
+
+---
+
+## [2025-09-15] - SAP AI Core Provider Integration Fix
 
 ### 🔧 SAP AI Core Provider Integration Fix
 

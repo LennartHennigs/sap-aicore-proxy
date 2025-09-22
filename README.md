@@ -27,6 +27,7 @@ npm start
 - **📁 File Upload**: Text documents and images with automatic content extraction
 - **🔄 Model Pooling**: Reuses model instances for optimal performance
 - **🎯 Intelligent Routing**: Automatic routing between SAP AI Core provider and direct APIs
+- **🚀 Auto-Discovery**: Automatically discovers deployment IDs from SAP AI Core API
 - **🔍 Configuration Validation**: Comprehensive startup validation ensures proper setup
 - **⚡ Enterprise Ready**: Thread-safe operations, graceful shutdown, monitoring
 - **🔧 OpenAI Compatible**: Works with any OpenAI-compatible AI client
@@ -82,6 +83,31 @@ This will check if the model is deployed in SAP AI Core and show deployment deta
 ```
 
 This will generate `config/models.json` from all deployed models with generic placeholders that need manual configuration.
+
+## 🚀 Automatic Deployment ID Discovery
+
+The proxy automatically discovers deployment IDs from SAP AI Core at startup, eliminating the need for manual configuration.
+```
+
+### Environment Variable Overrides
+
+For specific environments or custom deployments, you can override auto-discovered deployment IDs:
+
+```bash
+# In your .env file
+GPT_5_NANO_DEPLOYMENT_ID=your-custom-deployment-id
+ANTHROPIC_CLAUDE_4_SONNET_DEPLOYMENT_ID=your-claude-deployment-id
+GEMINI_2_5_FLASH_DEPLOYMENT_ID=your-gemini-deployment-id
+```
+
+**Priority order**: Environment variables → Auto-discovered IDs → Config fallback
+
+### Benefits
+
+- **Zero Configuration**: No need to manually manage deployment IDs
+- **Environment Agnostic**: Works across dev/staging/prod without config changes
+- **Automatic Updates**: Deployment IDs update when models are redeployed
+- **Flexible Overrides**: Environment variables for deployment-specific customization
 
 ### List Deployed Models
 
