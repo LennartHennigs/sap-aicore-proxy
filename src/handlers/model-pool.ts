@@ -41,7 +41,7 @@ class ModelPool {
       throw new Error(`Model ${modelName} not found in configuration`);
     }
 
-    console.log(`🔧 Creating new model instance for: ${modelName}`);
+    SecureLogger.logModelPoolOperation('Creating new model instance', modelName);
     
     // Build deployment URL for SAP AI Core
     const deploymentUrl = `${config.aicore.baseUrl}/v2/inference/deployments/${modelConfig.deploymentId}`;
@@ -77,7 +77,7 @@ class ModelPool {
     };
     
     this.pool.set(modelName, pooledModel);
-    console.log(`✅ Model instance created and pooled: ${modelName} (deployment: ${modelConfig.deploymentId})`);
+    SecureLogger.logModelConfigured(modelName);
     
     return agent;
   }
@@ -133,7 +133,7 @@ class ModelPool {
     }
     
     if (toRemove.length > 0) {
-      console.log(`🧹 Cleaning up idle model instances: ${toRemove.join(', ')}`);
+      SecureLogger.logModelPoolOperation(`Cleaning up ${toRemove.length} idle model instances`);
       for (const modelName of toRemove) {
         this.pool.delete(modelName);
       }
@@ -141,7 +141,7 @@ class ModelPool {
   }
 
   preloadModels(modelNames: string[]): void {
-    console.log(`🚀 Preloading models: ${modelNames.join(', ')}`);
+    SecureLogger.logModelPoolOperation(`Preloading ${modelNames.length} models`);
     
     // Preload models asynchronously without waiting
     modelNames.forEach(async (modelName) => {
@@ -150,8 +150,7 @@ class ModelPool {
           await this.getModel(modelName);
         }
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-        console.warn(`⚠️ Failed to preload model ${modelName}:`, errorMessage);
+        SecureLogger.logError('Model preload', error, modelName);
       }
     });
   }
@@ -162,7 +161,7 @@ class ModelPool {
       this.cleanupTimer = null;
     }
     
-    console.log(`🛑 Shutting down model pool with ${this.pool.size} instances`);
+    SecureLogger.logModelPoolOperation(`Shutting down model pool with ${this.pool.size} instances`);
     this.pool.clear();
   }
 }

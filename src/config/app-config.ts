@@ -78,7 +78,9 @@ export const config: AppConfig = {
     defaultTokenExpiry: parseInt(process.env.DEFAULT_TOKEN_EXPIRY || '3600', 10)
   },
   cors: {
-    origin: process.env.CORS_ORIGIN || '*',
+    origin: process.env.ALLOWED_ORIGINS 
+      ? process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim())
+      : (process.env.CORS_ORIGIN || '*'),
     methods: ['GET', 'POST', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization']
   },

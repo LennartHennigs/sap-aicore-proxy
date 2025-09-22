@@ -1,4 +1,5 @@
 import { config } from '../config/app-config.js';
+import { SecureLogger } from '../utils/secure-logger.js';
 
 interface TokenCache {
   token: string | null;
@@ -51,22 +52,26 @@ class TokenManager {
     );
 
     if (!response.ok) {
-      throw new Error(`Authentication failed: ${response.status} - ${response.statusText}`);
+      SecureLogger.logAuthFailure();
+      throw new Error('Authentication failed - please check credentials');
     }
 
     const data = await response.json() as { access_token?: string; expires_in?: number };
     
     if (!data.access_token) {
-      throw new Error('No access token received from authentication service');
+      SecureLogger.logAuthFailure();
+      throw new Error('Authentication failed - invalid response');
     }
 
     this.cache.token = data.access_token;
     this.cache.expiry = Date.now() + ((data.expires_in || config.auth.defaultTokenExpiry) - config.auth.tokenExpiryBuffer) * 1000;
     
+    SecureLogger.logAuthSuccess();
     return this.cache.token!; // We know it's not null at this point
   }
 
   clearCache(): void {
+    SecureLogger.logSecurityEvent('Token cache cleared');
     this.cache.token = null;
     this.cache.expiry = 0;
   }
