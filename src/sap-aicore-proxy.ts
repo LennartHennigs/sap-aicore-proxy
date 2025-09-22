@@ -8,6 +8,8 @@ import { directApiHandler } from './handlers/direct-api-handler.js';
 import { openaiHandler } from './handlers/openai-handler.js';
 import { modelPool } from './handlers/model-pool.js';
 import { SecureLogger } from './utils/secure-logger.js';
+import { ApiKeyManager } from './auth/api-key-manager.js';
+import { authenticateApiKey, addApiKeyHeaders } from './middleware/auth.js';
 import { 
   validateChatCompletion, 
   handleValidationErrors, 
@@ -92,6 +94,19 @@ const aiLimiter = rateLimit({
     });
   }
 });
+
+// Initialize API key system early
+try {
+  ApiKeyManager.initialize();
+  console.log('🔐 API key system initialized');
+} catch (error) {
+  console.error('❌ Failed to initialize API key system:', error);
+  process.exit(1);
+}
+
+// Apply authentication (before rate limiting but after CORS)
+app.use(authenticateApiKey);
+app.use(addApiKeyHeaders);
 
 // Apply rate limiting
 app.use(generalLimiter);
@@ -584,10 +599,10 @@ const server = app.listen(config.server.port, config.server.host, () => {
   }
   
   console.log(`📡 Configure your AI client with:`);
-  console.log(`   • API Host: http://${config.server.host}:${config.server.port}`);
-  console.log(`   • API Path: /v1`);
-  console.log(`   • API Key: any-string-works`);
-  console.log(`   • Available Models: ${modelRouter.getAllModels().join(', ')}`);
+  console.log(`\x1b[1m\x1b[37m   • API Host: http://${config.server.host}:${config.server.port}\x1b[0m`);
+  console.log(`\x1b[1m\x1b[37m   • API Path: /v1\x1b[0m`);
+  console.log(`\x1b[1m\x1b[37m   • API Key: ${ApiKeyManager.getApiKey()}\x1b[0m`);
+  console.log(`\x1b[1m\x1b[37m   • Available Models: ${modelRouter.getAllModels().join(', ')}\x1b[0m`);
   
   // Preload provider-supported models for better performance
   const providerModels = modelRouter.getProviderSupportedModels();
