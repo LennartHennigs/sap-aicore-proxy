@@ -30,8 +30,7 @@ This is a production-ready proxy server that provides OpenAI-compatible API acce
 The [config/models.json](./config/models.json) file defines supported models:
 
 ```typescript
-interface ModelConfig {
-  deploymentId?: string;         // Optional: SAP AI Core deployment ID (auto-discovered if not set)
+interface ModelConfig 
   provider: string;              // e.g., "anthropic", "sap-aicore", "google"
   supportsStreaming: boolean;    // True streaming capability
   supportsVision?: boolean;      // Image processing support
@@ -324,6 +323,7 @@ The proxy validates all configurations on startup:
 5. **Authentication**: Verify `.env` credentials and token refresh
 6. **Discovery Failures**: Check SAP AI Core API connectivity and permissions
 7. **Format Errors**: Check request format matches expected provider format
+
 
 ### Debug Endpoints
 - `GET /health` - Server status and model pool statistics

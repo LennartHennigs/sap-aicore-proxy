@@ -19,7 +19,13 @@
     "test:performance": "node --import=tsx --env-file=.env ./tests/performance/load-tests.ts",
     "test:run": "./scripts/run-tests.sh",
     "test:full": "./scripts/run-tests.sh -s -k all",
-    "test:report": "./scripts/run-tests.sh -r all"
+    "test:report": "./scripts/run-tests.sh -r all",
+    "test:security": "node --import=tsx --env-file=.env ./tests/security-test-runner.ts",
+    "test:secure-logger": "node --import=tsx --env-file=.env ./tests/unit/secure-logger-tests.ts",
+    "test:validation-middleware": "node --import=tsx --env-file=.env ./tests/unit/validation-middleware-tests.ts",
+    "test:rate-limiting": "node --import=tsx --env-file=.env ./tests/unit/rate-limiting-tests.ts",
+    "test:security-headers": "node --import=tsx --env-file=.env ./tests/unit/security-headers-tests.ts",
+    "test:security-integration": "node --import=tsx --env-file=.env ./tests/integration/security-integration-tests.ts"
   },
   "repository": {
     "type": "git",
@@ -31,6 +37,8 @@
   "homepage": "https://github.com/leanix-sandbox/ai-hackathon-starter#readme",
   "devDependencies": {
     "@types/node": "^24.0.1",
+    "@types/supertest": "^6.0.2",
+    "supertest": "^7.0.0",
     "tsx": "^4.20.2",
     "typescript": "^5.8.3"
   },
@@ -41,6 +49,9 @@
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
     "cors": "^2.8.5",
-    "express": "^5.1.0"
+    "express": "^5.1.0",
+    "express-rate-limit": "^7.5.0",
+    "express-validator": "^7.2.0",
+    "helmet": "^8.0.0"
   }
 }

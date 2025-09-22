@@ -41,7 +41,7 @@ async function testDirectVisionAPI(): Promise<DirectApiTestResult> {
   try {
     console.log('🔑 Getting access token...');
     const token = await getAccessToken();
-    console.log('✅ Got token:', token.substring(0, 20) + '...');
+    console.log('✅ Authentication successful');
 
     const baseUrl = process.env.AICORE_BASE_URL;
     const deploymentId = 'd0004379cc65d2ad'; // GPT-5 nano deployment ID
@@ -61,8 +61,8 @@ async function testDirectVisionAPI(): Promise<DirectApiTestResult> {
       }
     };
 
-    console.log('🌐 Making direct API call to:', url);
-    console.log('📋 Payload:', JSON.stringify(payload, null, 2));
+    console.log('🌐 Making direct API call...');
+    console.log('📋 Testing vision API with sample data');
 
     const response = await fetch(url, {
       method: 'POST',
@@ -75,10 +75,8 @@ async function testDirectVisionAPI(): Promise<DirectApiTestResult> {
     });
 
     console.log('📊 Response status:', response.status);
-    console.log('📊 Response headers:', Object.fromEntries(response.headers.entries()));
 
     const responseText = await response.text();
-    console.log('📋 Raw response:', responseText);
 
     if (!response.ok) {
       return {
