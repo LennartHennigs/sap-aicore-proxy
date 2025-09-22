@@ -5,6 +5,81 @@ All notable changes to the SAP AI Core Proxy project will be documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2025-09-22
+
+### 🌐 Native API Endpoints Support
+
+### Added
+
+#### Multi-Format API Compatibility
+
+- **Claude Native API Endpoint** (`/v1/messages`)
+  - Full Anthropic Claude API compatibility for seamless integration with Claude Desktop and Anthropic SDKs
+  - Native Claude request/response format with proper `content` array structure
+  - Support for `system` parameter for system messages
+  - Claude-style streaming with Server-Sent Events (message_start, content_block_delta, message_stop)
+  - Proper Claude error format with `type` and `message` fields
+
+- **Gemini Native API Endpoint** (`/v1/models/{model}:generateContent`)
+  - Full Google Gemini API compatibility for integration with Google AI Studio and Gemini SDKs
+  - Native Gemini request format with `contents` array and `parts` structure
+  - Support for `systemInstruction` and `generationConfig` parameters
+  - Gemini-style streaming with `?alt=sse` query parameter support
+  - Vision support with `inlineData` and `fileData` formats for image processing
+  - Proper Gemini error format with `code`, `message`, and `status` fields
+
+#### Universal Model Support
+
+- **Cross-Format Compatibility**
+  - All three API formats work with all configured models
+  - Automatic request/response format conversion between OpenAI, Claude, and Gemini formats
+  - Preserved all existing functionality (streaming, vision, error handling) across all endpoints
+
+- **Enhanced Configuration Compatibility**
+  - No changes required to existing `models.json` configuration
+  - All model capabilities (vision, streaming, direct/provider API) work across all endpoints
+  - Backward compatibility maintained for existing OpenAI-compatible integrations
+
+#### Documentation and Examples
+
+- **Comprehensive Documentation** (`NATIVE_API_ENDPOINTS.md`)
+  - Complete API reference for all three formats
+  - Working curl examples for each endpoint
+  - Configuration guides for popular tools (Claude Desktop, Google AI Studio, OpenAI-compatible tools)
+  - Error handling documentation for each API format
+
+### Benefits
+
+- **Tool Ecosystem Integration**: Direct compatibility with vendor-specific tools and SDKs
+- **Migration Flexibility**: Easy migration of existing integrations without code changes  
+- **Development Workflow**: Choose the API format that best fits your development workflow
+- **Configuration Tools**: Native support for Claude Desktop, Google AI Studio, and other specialized tools
+
+### Example Usage
+
+#### OpenAI Format (Existing)
+```bash
+curl -H "Authorization: Bearer any-key-works" -H "Content-Type: application/json" \
+  -d '{"model": "anthropic--claude-4-sonnet", "max_tokens": 100, "messages": [{"role": "user", "content": "Hello!"}]}' \
+  http://localhost:3001/v1/chat/completions
+```
+
+#### Claude Native Format (New)
+```bash
+curl -H "Authorization: Bearer any-key-works" -H "Content-Type: application/json" \
+  -d '{"model": "anthropic--claude-4-sonnet", "max_tokens": 100, "messages": [{"role": "user", "content": "Hello!"}]}' \
+  http://localhost:3001/v1/messages
+```
+
+#### Gemini Native Format (New)
+```bash
+curl -H "Authorization: Bearer any-key-works" -H "Content-Type: application/json" \
+  -d '{"contents": [{"role": "user", "parts": [{"text": "Hello!"}]}], "generationConfig": {"maxOutputTokens": 100}}' \
+  http://localhost:3001/v1/models/gemini-2.5-flash:generateContent
+```
+
+---
+
 ## [1.0.0] - 2025-09-22
 
 ### 🚀 Automatic Deployment ID Discovery

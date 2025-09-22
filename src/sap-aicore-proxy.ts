@@ -502,6 +502,421 @@ app.get('/v1/models', (req, res) => {
   });
 });
 
+// Claude native API endpoint - /v1/messages
+app.post('/v1/messages', async (req, res) => {
+  try {
+    const { messages, max_tokens, temperature, stream, model, system } = req.body;
+    
+    // Input validation
+    if (!messages || !Array.isArray(messages) || messages.length === 0) {
+      return res.status(400).json({
+        error: {
+          type: 'invalid_request_error',
+          message: 'Messages array is required and must not be empty'
+        }
+      });
+    }
+    
+    if (!model || typeof model !== 'string' || model.trim() === '') {
+      return res.status(400).json({
+        error: {
+          type: 'invalid_request_error',
+          message: 'Model is required and must be a non-empty string'
+        }
+      });
+    }
+
+    // Convert Claude format to internal OpenAI format
+    let processedMessages = [...messages];
+    
+    // Handle system message if provided
+    if (system) {
+      processedMessages.unshift({
+        role: 'system',
+        content: system
+      });
+    }
+
+    // Validate model
+    const validation = modelRouter.validateModel(model);
+    if (!validation.isValid) {
+      return res.status(400).json({
+        error: {
+          type: 'invalid_request_error',
+          message: validation.error
+        }
+      });
+    }
+
+    const responseId = `msg_${Date.now()}`;
+
+    // Handle streaming requests
+    if (stream) {
+      res.writeHead(200, {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'Cache-Control'
+      });
+
+      try {
+        let result;
+        if (modelRouter.useDirectAPI(model)) {
+          result = await directApiHandler.callDirectAPI(model, processedMessages, false);
+        } else {
+          result = await openaiHandler.callProviderAPI(model, processedMessages);
+        }
+
+        // Send Claude-style streaming events
+        const streamEvent = {
+          type: 'message_start',
+          message: {
+            id: responseId,
+            type: 'message',
+            role: 'assistant',
+            content: [],
+            model: model,
+            usage: { input_tokens: 0, output_tokens: 0 }
+          }
+        };
+        res.write(`event: message_start\ndata: ${JSON.stringify(streamEvent)}\n\n`);
+
+        const contentBlockStart = {
+          type: 'content_block_start',
+          index: 0,
+          content_block: { type: 'text', text: '' }
+        };
+        res.write(`event: content_block_start\ndata: ${JSON.stringify(contentBlockStart)}\n\n`);
+
+        const contentBlockDelta = {
+          type: 'content_block_delta',
+          index: 0,
+          delta: { type: 'text_delta', text: result.text }
+        };
+        res.write(`event: content_block_delta\ndata: ${JSON.stringify(contentBlockDelta)}\n\n`);
+
+        const contentBlockStop = {
+          type: 'content_block_stop',
+          index: 0
+        };
+        res.write(`event: content_block_stop\ndata: ${JSON.stringify(contentBlockStop)}\n\n`);
+
+        const messageStop = {
+          type: 'message_delta',
+          delta: { 
+            stop_reason: 'end_turn',
+            usage: {
+              output_tokens: result.usage?.completionTokens || 0
+            }
+          },
+          usage: {
+            input_tokens: result.usage?.promptTokens || 0,
+            output_tokens: result.usage?.completionTokens || 0
+          }
+        };
+        res.write(`event: message_delta\ndata: ${JSON.stringify(messageStop)}\n\n`);
+
+        const messageStopEvent = { type: 'message_stop' };
+        res.write(`event: message_stop\ndata: ${JSON.stringify(messageStopEvent)}\n\n`);
+
+        res.end();
+      } catch (error) {
+        console.error('❌ Claude streaming error:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        
+        const errorEvent = {
+          type: 'error',
+          error: {
+            type: 'api_error',
+            message: `Streaming error: ${errorMessage}`
+          }
+        };
+        res.write(`event: error\ndata: ${JSON.stringify(errorEvent)}\n\n`);
+        res.end();
+      }
+      
+      return;
+    }
+
+    // Handle non-streaming requests
+    let result;
+    
+    if (modelRouter.useDirectAPI(model)) {
+      try {
+        result = await directApiHandler.callDirectAPI(model, processedMessages, false);
+      } catch (error) {
+        console.error('❌ Direct API call failed:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        return res.status(500).json({
+          error: {
+            type: 'api_error',
+            message: `Direct API error: ${errorMessage}`
+          }
+        });
+      }
+    } else {
+      try {
+        result = await openaiHandler.callProviderAPI(model, processedMessages);
+      } catch (error) {
+        console.error('❌ Provider API call failed:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        return res.status(500).json({
+          error: {
+            type: 'api_error',
+            message: `Provider API error: ${errorMessage}`
+          }
+        });
+      }
+    }
+
+    // Format response in Claude-compatible format
+    const response = {
+      id: responseId,
+      type: 'message',
+      role: 'assistant',
+      content: [
+        {
+          type: 'text',
+          text: result.text
+        }
+      ],
+      model: model,
+      stop_reason: 'end_turn',
+      stop_sequence: null,
+      usage: {
+        input_tokens: result.usage?.promptTokens || 0,
+        output_tokens: result.usage?.completionTokens || 0
+      }
+    };
+
+    res.json(response);
+
+  } catch (error) {
+    console.error('❌ Claude API error:', error);
+    res.status(500).json({
+      error: {
+        type: 'api_error',
+        message: error instanceof Error ? error.message : 'Internal server error'
+      }
+    });
+  }
+});
+
+// Gemini native API endpoint - /v1/models/{model}:generateContent
+app.post('/v1/models/:model\\:generateContent', async (req, res) => {
+  try {
+    const { contents, generationConfig, systemInstruction } = req.body;
+    const model = (req.params as any).model;
+    
+    // Input validation
+    if (!contents || !Array.isArray(contents) || contents.length === 0) {
+      return res.status(400).json({
+        error: {
+          code: 400,
+          message: 'Contents array is required and must not be empty',
+          status: 'INVALID_ARGUMENT'
+        }
+      });
+    }
+    
+    if (!model || typeof model !== 'string' || model.trim() === '') {
+      return res.status(400).json({
+        error: {
+          code: 400,
+          message: 'Model must be a non-empty string',
+          status: 'INVALID_ARGUMENT'
+        }
+      });
+    }
+
+    // Convert Gemini format to internal OpenAI format
+    const processedMessages = [];
+    
+    // Add system instruction if provided
+    if (systemInstruction && systemInstruction.parts && systemInstruction.parts.length > 0) {
+      const systemContent = systemInstruction.parts.map((part: any) => part.text).join('\n');
+      processedMessages.push({
+        role: 'system',
+        content: systemContent
+      });
+    }
+
+    // Convert contents to messages
+    for (const content of contents) {
+      const role = content.role === 'model' ? 'assistant' : content.role;
+      
+      if (content.parts && content.parts.length > 0) {
+        // Handle mixed content (text + images)
+        if (content.parts.length === 1 && content.parts[0].text) {
+          // Simple text message
+          processedMessages.push({
+            role: role,
+            content: content.parts[0].text
+          });
+        } else {
+          // Mixed content array
+          const contentArray = content.parts.map((part: any) => {
+            if (part.text) {
+              return { type: 'text', text: part.text };
+            } else if (part.inlineData || part.fileData) {
+              // Handle image data
+              const imageData = part.inlineData || part.fileData;
+              const mimeType = imageData.mimeType || 'image/jpeg';
+              const data = imageData.data;
+              
+              return {
+                type: 'image_url',
+                image_url: {
+                  url: `data:${mimeType};base64,${data}`
+                }
+              };
+            }
+            return { type: 'text', text: '[Unsupported content type]' };
+          });
+          
+          processedMessages.push({
+            role: role,
+            content: contentArray
+          });
+        }
+      }
+    }
+
+    // Validate model
+    const validation = modelRouter.validateModel(model);
+    if (!validation.isValid) {
+      return res.status(400).json({
+        error: {
+          code: 400,
+          message: validation.error,
+          status: 'INVALID_ARGUMENT'
+        }
+      });
+    }
+
+    // Handle streaming (Gemini format)
+    const isStreaming = req.query.alt === 'sse' || generationConfig?.stream === true;
+    
+    if (isStreaming) {
+      res.writeHead(200, {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+        'Access-Control-Allow-Origin': '*'
+      });
+
+      try {
+        let result;
+        if (modelRouter.useDirectAPI(model)) {
+          result = await directApiHandler.callDirectAPI(model, processedMessages, false);
+        } else {
+          result = await openaiHandler.callProviderAPI(model, processedMessages);
+        }
+
+        // Send Gemini-style streaming response
+        const streamResponse = {
+          candidates: [{
+            content: {
+              parts: [{ text: result.text }],
+              role: 'model'
+            },
+            finishReason: 'STOP',
+            index: 0
+          }],
+          usageMetadata: {
+            promptTokenCount: result.usage?.promptTokens || 0,
+            candidatesTokenCount: result.usage?.completionTokens || 0,
+            totalTokenCount: result.usage?.totalTokens || 0
+          }
+        };
+
+        res.write(`data: ${JSON.stringify(streamResponse)}\n\n`);
+        res.write('data: [DONE]\n\n');
+        res.end();
+      } catch (error) {
+        console.error('❌ Gemini streaming error:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        
+        const errorResponse = {
+          error: {
+            code: 500,
+            message: `Streaming error: ${errorMessage}`,
+            status: 'INTERNAL'
+          }
+        };
+        res.write(`data: ${JSON.stringify(errorResponse)}\n\n`);
+        res.end();
+      }
+      
+      return;
+    }
+
+    // Handle non-streaming requests
+    let result;
+    
+    if (modelRouter.useDirectAPI(model)) {
+      try {
+        result = await directApiHandler.callDirectAPI(model, processedMessages, false);
+      } catch (error) {
+        console.error('❌ Direct API call failed:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        return res.status(500).json({
+          error: {
+            code: 500,
+            message: `Direct API error: ${errorMessage}`,
+            status: 'INTERNAL'
+          }
+        });
+      }
+    } else {
+      try {
+        result = await openaiHandler.callProviderAPI(model, processedMessages);
+      } catch (error) {
+        console.error('❌ Provider API call failed:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        return res.status(500).json({
+          error: {
+            code: 500,
+            message: `Provider API error: ${errorMessage}`,
+            status: 'INTERNAL'
+          }
+        });
+      }
+    }
+
+    // Format response in Gemini-compatible format
+    const response = {
+      candidates: [{
+        content: {
+          parts: [{ text: result.text }],
+          role: 'model'
+        },
+        finishReason: 'STOP',
+        index: 0,
+        safetyRatings: []
+      }],
+      usageMetadata: {
+        promptTokenCount: result.usage?.promptTokens || 0,
+        candidatesTokenCount: result.usage?.completionTokens || 0,
+        totalTokenCount: result.usage?.totalTokens || 0
+      }
+    };
+
+    res.json(response);
+
+  } catch (error) {
+    console.error('❌ Gemini API error:', error);
+    res.status(500).json({
+      error: {
+        code: 500,
+        message: error instanceof Error ? error.message : 'Internal server error',
+        status: 'INTERNAL'
+      }
+    });
+  }
+});
+
 // Start server
 const server = app.listen(config.server.port, config.server.host, async () => {
   console.log(`🚀 SAP AI Core proxy running at http://${config.server.host}:${config.server.port}`);

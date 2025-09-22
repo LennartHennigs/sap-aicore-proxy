@@ -32,6 +32,62 @@ npm start
 - **⚡ Enterprise Ready**: Thread-safe operations, graceful shutdown, monitoring
 - **🔧 OpenAI Compatible**: Works with any OpenAI-compatible AI client
 - **📊 Real-time Monitoring**: Health checks with model pool statistics
+- **🌐 Multi-Format API Support**: Native Claude and Gemini API endpoints alongside OpenAI compatibility
+
+## 🌐 API Formats
+
+The proxy supports **three API formats** for maximum compatibility with different tools and SDKs:
+
+### 1. OpenAI-Compatible API (Default)
+**Endpoint:** `POST /v1/chat/completions`
+
+Standard format that works with most AI tools and OpenAI SDKs.
+
+```bash
+curl -H "Authorization: Bearer any-key-works" -H "Content-Type: application/json" \
+  -d '{"model": "anthropic--claude-4-sonnet", "max_tokens": 100, "messages": [{"role": "user", "content": "Hello!"}]}' \
+  http://localhost:3001/v1/chat/completions
+```
+
+### 2. Claude Native API
+**Endpoint:** `POST /v1/messages`
+
+Native Anthropic format - perfect for Claude Desktop, Anthropic SDKs, and tools expecting Claude's format.
+
+```bash
+curl -H "Authorization: Bearer any-key-works" -H "Content-Type: application/json" \
+  -d '{"model": "anthropic--claude-4-sonnet", "max_tokens": 100, "messages": [{"role": "user", "content": "Hello!"}]}' \
+  http://localhost:3001/v1/messages
+```
+
+**Features:**
+- System messages via `system` parameter
+- Claude-style streaming with proper SSE events
+- Native Claude response format with `content` arrays
+
+### 3. Gemini Native API  
+**Endpoint:** `POST /v1/models/{model}:generateContent`
+
+Native Google format - works with Google AI Studio, Gemini SDKs, and Google-compatible tools.
+
+```bash
+curl -H "Authorization: Bearer any-key-works" -H "Content-Type: application/json" \
+  -d '{"contents": [{"role": "user", "parts": [{"text": "Hello!"}]}], "generationConfig": {"maxOutputTokens": 100}}' \
+  http://localhost:3001/v1/models/gemini-2.5-flash:generateContent
+```
+
+**Features:**
+- System instructions via `systemInstruction` parameter
+- Gemini-style streaming with `?alt=sse`
+- Vision support with `inlineData` and `fileData` formats
+
+### Universal Model Support
+
+**All API formats work with all models:**
+- Use Claude format with Gemini models
+- Use Gemini format with Claude models  
+- Use OpenAI format with any model
+- Automatic format conversion between APIs
 
 ## 🎯 Supported / Tested Models
 
