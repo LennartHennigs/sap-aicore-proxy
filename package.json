@@ -1,6 +1,6 @@
 {
   "name": "sap-aicore-proxy",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "private": true,
   "type": "module",
   "description": "A high-performance, enterprise-grade proxy server that provides OpenAI-compatible API access to SAP AI Core's AI models (GPT-5 nano, Claude 4 Sonnet, Gemini 2.5 Flash).",
@@ -25,7 +25,13 @@
     "test:validation-middleware": "node --import=tsx --env-file=.env ./tests/unit/validation-middleware-tests.ts",
     "test:rate-limiting": "node --import=tsx --env-file=.env ./tests/unit/rate-limiting-tests.ts",
     "test:security-headers": "node --import=tsx --env-file=.env ./tests/unit/security-headers-tests.ts",
-    "test:security-integration": "node --import=tsx --env-file=.env ./tests/integration/security-integration-tests.ts"
+    "test:security-integration": "node --import=tsx --env-file=.env ./tests/integration/security-integration-tests.ts",
+    "test:auth": "node --import=tsx --env-file=.env ./tests/run-authentication-tests.ts",
+    "test:auth:unit": "node --import=tsx --env-file=.env ./tests/unit/api-key-manager-tests.ts && node --import=tsx --env-file=.env ./tests/unit/auth-middleware-tests.ts",
+    "test:auth:integration": "node --import=tsx --env-file=.env ./tests/integration/authentication-integration-tests.ts",
+    "test:api-key-manager": "node --import=tsx --env-file=.env ./tests/unit/api-key-manager-tests.ts",
+    "test:auth-middleware": "node --import=tsx --env-file=.env ./tests/unit/auth-middleware-tests.ts",
+    "test:auth:flow": "node --import=tsx --env-file=.env ./tests/integration/auth-flow-tests.ts"
   },
   "repository": {
     "type": "git",
