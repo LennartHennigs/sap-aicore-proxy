@@ -212,7 +212,7 @@ export class AuthFlowTests {
         const client = new ProxyHttpClient('http://localhost:3001', test.key);
         const result = await client.healthCheck();
 
-        const success = result.success || result.statusCode === 200;
+        const success = (result.success ?? false) || result.statusCode === 200;
         if (success) successCount++;
 
         results.push({
