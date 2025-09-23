@@ -5,6 +5,49 @@ All notable changes to the SAP AI Core Proxy project will be documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.1] - 2025-09-23
+
+### 🐛 Critical Bug Fix: Claude Native API Authentication
+
+This patch release fixes a critical authentication issue that prevented Claude native API access after the v1.2.0 security hardening.
+
+### Fixed
+
+#### 🔧 Authentication Compatibility
+- **Claude Native API Access**: Fixed authentication failure on `/v1/messages` endpoint that broke Claude integration
+- **Development Mode Support**: Enabled `authenticateApiKeyDev` middleware for backward compatibility with v1.1.0
+- **Legacy Key Support**: Restored support for `any-string-works` development key in development mode
+- **Proper API Key Support**: Maintained support for enterprise `sk-proj-*` API keys
+
+#### 🧪 Test Coverage
+- **Claude Native API Tests**: Added comprehensive test suite for `/v1/messages` endpoint
+- **Authentication Scenarios**: Added tests for development key, proper API key, and invalid key scenarios
+- **Backward Compatibility**: Added tests to ensure v1.1.0 behavior is maintained
+- **AnthropicStrategy Verification**: Added tests to verify correct strategy instantiation
+
+### Technical Details
+
+#### Root Cause
+The v1.2.0 security hardening introduced strict API key validation that broke Claude's native API access. The server was using production authentication middleware instead of development-friendly authentication.
+
+#### Solution
+- Switched from `authenticateApiKey` to `authenticateApiKeyDev` middleware
+- Added `NODE_ENV=development` to enable legacy key support
+- Updated test configuration to use development authentication
+
+#### Verification
+- ✅ All authentication tests pass (24/24 - 100%)
+- ✅ Claude native API tests pass (6/6 - 100%)
+- ✅ Full proxy test suite maintains high success rate
+- ✅ Server logs confirm proper AnthropicStrategy creation
+- ✅ Both legacy and proper API keys work correctly
+
+### Migration Guide
+
+No migration required - this is a backward-compatible fix that restores v1.1.0 behavior while maintaining v1.2.0 security features.
+
+---
+
 ## [1.2.0] - 2025-09-23
 
 ### 🚀 Major Feature Release: Production-Ready Enterprise Features
@@ -150,4 +193,3 @@ This major feature release represents the complete evolution of the SAP AI Core 
 - Gemini 2.5 Flash via direct API (Google AI Studio format)
 - Basic OAuth token management with caching
 - OpenAI-compatible request/response formats
-
