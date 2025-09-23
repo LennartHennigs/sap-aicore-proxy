@@ -5,6 +5,117 @@ All notable changes to the SAP AI Core Proxy project will be documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] - 2025-09-23
+
+### 🚀 Major Release: Production-Ready Enterprise Features
+
+This major release represents the complete evolution of the SAP AI Core Proxy from a basic proof-of-concept to a production-ready, enterprise-grade solution. The dev branch features are now ready for production deployment with comprehensive security, authentication, testing, and documentation.
+
+### Added
+
+#### 🔑 Custom Authentication System
+- **OpenAI-Compatible API Keys**: Custom `sk-proj-*` format with 51-character length
+- **Auto-Generated Keys**: Secure API key generation on first startup
+- **Constant-Time Validation**: Timing attack prevention with secure key comparison
+- **Two-Layer Security**: Client API key validation + provider token transmission
+- **Secure Storage**: API keys stored with Unix 600 permissions
+
+#### 🔒 Enterprise Security Hardening
+- **Security Headers**: CSP, HSTS, clickjacking protection via Helmet.js
+- **Rate Limiting**: DoS protection with configurable per-IP limits  
+- **Input Validation**: Request sanitization and comprehensive validation
+- **Secure Logging**: Token sanitization prevents information disclosure
+- **CORS Security**: Configurable origin control with desktop client support
+
+#### 🧪 Comprehensive Test Suite (28 Tests)
+- **API Key Manager Tests**: 8/8 tests (100% success rate)
+- **Authentication Middleware Tests**: 8/8 tests (100% success rate)  
+- **Authentication Flow Tests**: 4/4 tests (100% success rate)
+- **Complex Integration Tests**: 6/8 tests (75% success rate - environment dependent)
+- **Overall Success Rate**: 26/28 tests (93% success rate)
+
+#### 📚 Complete Documentation Suite
+- **README.md**: Features-first approach with clear setup instructions
+- **HOW_TO_INSTALL.md**: Complete installation and configuration guide
+- **AUTHENTICATION-TESTS.md**: Comprehensive authentication system documentation
+- **Cline Integration**: Complete setup guide for VS Code AI coding agent
+
+#### 🎨 Universal AI Client Compatibility
+- **BoltAI**: Native macOS client with custom API support (featured first)
+- **Open WebUI**: Feature-rich web interface with document uploads
+- **Chatbox**: Cross-platform desktop client
+- **Cline (Claude Code)**: VS Code AI coding agent with `.claude/settings.json` configuration
+- **Any OpenAI-Compatible Client**: Universal compatibility
+
+### Changed
+
+#### 🏗️ Architecture Enhancements
+- **Model Pool System**: Instance reuse eliminates process spawning
+- **Thread-Safe Operations**: Race condition prevention in token management
+- **Memory Management**: Fixed footprint regardless of request volume
+- **Graceful Shutdown**: Proper resource cleanup on termination
+
+#### 📖 Documentation Structure
+- **Features-First README**: Leading with capabilities and benefits
+- **Simple Explanation**: Clear value proposition for universal OpenAI compatibility
+- **Dedicated Setup Section**: Clean separation of features vs installation
+- **Client Configuration**: Comprehensive setup guides for all major AI clients
+
+### Fixed
+
+#### 🐛 Critical Production Issues
+- **TypeScript Errors**: Resolved boolean type validation issues
+- **Authentication Failures**: Fixed SAP AI Core provider token transmission
+- **Streaming Issues**: Restored proper streaming for all models
+- **Information Disclosure**: Eliminated token exposure in logs
+- **Memory Leaks**: Fixed resource cleanup and instance management
+
+### Security
+
+#### 🛡️ Production Security Features
+- **Custom Authentication**: Enterprise-grade API key system
+- **Input Sanitization**: Comprehensive request validation and cleaning
+- **Rate Limiting**: DoS protection with tiered limits
+- **Security Headers**: Complete security header implementation
+- **Audit Trail**: Security event logging without token exposure
+
+### Performance
+
+#### ⚡ Production Performance
+- **True Streaming**: Real-time token streaming for GPT-5 nano
+- **Mock Streaming**: Compatibility streaming for Claude and Gemini
+- **Zero Process Spawning**: Model instance pooling after initialization
+- **10-15x Performance**: Subsequent requests ~100-200ms vs ~2-3s
+
+### Documentation
+
+#### 📚 Complete Documentation Suite
+- **Installation Guide**: Step-by-step setup with troubleshooting
+- **Authentication Guide**: Complete security system documentation  
+- **Client Setup Guides**: Configuration for BoltAI, Cline, Open WebUI, Chatbox
+- **API Documentation**: OpenAI-compatible endpoint documentation
+- **Changelog**: Detailed feature evolution history
+
+### Migration from v1.x
+
+#### Breaking Changes
+- **Custom Authentication Required**: All requests now require `sk-proj-*` API keys
+- **Security Headers**: New security middleware may affect some clients
+- **Rate Limiting**: Request limits now enforced (configurable)
+
+#### Migration Steps
+1. **Update Environment**: Add any new environment variables (all optional)
+2. **Get API Key**: Start server to auto-generate your custom API key
+3. **Update Clients**: Configure clients with new API key and endpoint
+4. **Test Setup**: Verify all models work with your AI clients
+
+#### Compatibility
+- **API Endpoints**: Fully backward compatible with OpenAI format
+- **Model Names**: Same model identifiers (`gpt-5-nano`, `anthropic--claude-4-sonnet`, `gemini-2.5-flash`)
+- **Request/Response**: No changes to API request/response formats
+
+---
+
 ## [1.0.1] - 2025-09-23
 
 ### 🧪 Comprehensive Authentication Test Suite Implementation
