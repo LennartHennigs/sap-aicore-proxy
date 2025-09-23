@@ -1,6 +1,6 @@
 {
   "name": "sap-aicore-proxy",
-  "version": "2.0.0",
+  "version": "1.2.0",
   "private": true,
   "type": "module",
   "description": "A high-performance, enterprise-grade proxy server that provides OpenAI-compatible API access to SAP AI Core's AI models (GPT-5 nano, Claude 4 Sonnet, Gemini 2.5 Flash).",
