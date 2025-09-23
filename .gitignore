@@ -21,8 +21,12 @@ vite.config.ts.timestamp*
 .env.production.local
 .env.local
 
+# SAP AI Core credentials
+ai-core-key.json
+
 # MacOS files
 .DS_Store
 
 # Claude
 .claude
+.env

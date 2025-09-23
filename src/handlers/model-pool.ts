@@ -57,10 +57,10 @@ class ModelPool {
         'Authorization': `Bearer ${accessToken}`
       }
     });
-
+    
     // Set environment variable as fallback for the provider
     process.env.AICORE_DEPLOYMENT_URL = deploymentUrl;
-
+    
     const providerModelName = `${config.models.providers.sapAiCore.prefix}/${modelName}`;
     const model = aisdk(sapAiCore(providerModelName));
 
