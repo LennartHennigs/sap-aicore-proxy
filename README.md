@@ -1,281 +1,303 @@
 # SAP AI Core Proxy 🚀
 
-A simple proxy server that provides OpenAI-compatible API access to SAP AI Core's AI deployed models.
+A high-performance, enterprise-grade proxy server that provides OpenAI-compatible API access to SAP AI Core's AI deployed models with comprehensive security hardening and authentication.
+
+## 🎯 What This Proxy Does
+
+**Simple explanation:** This proxy lets you use your SAP AI Core models (like GPT-5 nano, Claude 4 Sonnet, Gemini 2.5 Flash) with any OpenAI-compatible AI application.
+
+### Why Use This Proxy?
+
+- **🔌 Universal Compatibility**: Your SAP AI Core models work with **any** OpenAI-compatible app
+- **🎨 Use Your Favorite AI Apps**: BoltAI, Open WebUI, Chatbox, Cline, and hundreds of other AI tools
+- **💰 Cost Effective**: Use your existing SAP AI Core deployment instead of paying for separate API access
+- **🔒 Enterprise Security**: Custom authentication and security hardening for business use
+- **🚀 Easy Setup**: Install once, configure once, use everywhere
+
+### How It Works
+
+1. **Install & Run**: Set up the proxy once with your SAP AI Core credentials
+2. **Get API Key**: Proxy generates a custom OpenAI-compatible API key  
+3. **Connect Any App**: Use `http://localhost:3001` as your OpenAI API endpoint
+4. **Start Chatting**: Your AI apps now use your SAP AI Core models seamlessly
+
+**Result**: Every OpenAI-compatible AI application becomes compatible with your SAP AI Core deployment.
 
 ---
 
-## ⚡ Quick Start
+## 🎯 Supported Models
 
-```bash
-# 1. Clone and enter
-git clone https://github.com/your-repo/sap-aicore-proxy.git
-cd sap-aicore-proxy
+- ✅ **`gpt-5-nano`** - OpenAI GPT-5 nano via SAP AI Core provider
+  - **🌊 True Streaming** - Real-time token-by-token streaming
+  - **⚪ Text-only** - Text processing capabilities
 
-# 2. Install dependencies
-npm ci
+- ✅ **`anthropic--claude-4-sonnet`** - Anthropic Claude 4 Sonnet via direct API
+  - **📦 Mock Streaming** - Complete response sent as streaming chunks
+  - **👁️ Vision Support** - Image analysis and understanding
 
-# 3. Configure environment
-cp .env.example .env   # copy from example and edit with your SAP AI Core credentials
-
-# 4. Start proxy server
-npm start
-
-# 5. Run and (Configure) a LLM client of your choice
-
-# 6. Stop proxy server (when no longer needed)
-npm stop
-```
-
-The proxy will be available at `http://localhost:3001`
+- ✅ **`gemini-2.5-flash`** - Google Gemini 2.5 Flash via direct API
+  - **📦 Mock Streaming** - Complete response sent as streaming chunks
+  - **👁️ Vision Support** - Image analysis and understanding
 
 ---
 
-## 🔑 Environment Configuration
+## 🔒 Security Features
 
-Create a `.env` file from the provided `.env.example` template with your SAP AI Core credentials:
+### Enterprise-Grade Security
+- **Custom Authentication**: Two-layer authentication (client key + provider tokens)
+- **Security Headers**: CSP, HSTS, clickjacking protection via Helmet.js
+- **Rate Limiting**: DoS protection with configurable per-IP limits
+- **Input Validation**: Request sanitization and validation
+- **Secure Logging**: Token sanitization prevents information disclosure
+- **CORS Security**: Configurable origin control
 
-```env
-# SAP AI Core Configuration (Required)
-AICORE_AUTH_URL=https://your-auth-url.hana.ondemand.com
-AICORE_CLIENT_ID="your-client-id"
-AICORE_CLIENT_SECRET="your-client-secret"
-AICORE_BASE_URL=https://api.ai.your-region.aws.ml.hana.ondemand.com
-
-# Server Configuration (Optional - defaults provided)
-PORT=3001                    # Server port
-HOST=localhost              # Server host
-TOKEN_EXPIRY_BUFFER=60      # Token refresh buffer in seconds
-CORS_ORIGIN=*              # CORS origin policy
-
-# Model Configuration (Optional)
-DEFAULT_MODEL=gpt-5-nano
-DEFAULT_MAX_TOKENS=1000
-DEFAULT_TOKEN_EXPIRY=3600
-
-# Model Pool Configuration (Optional)
-MODEL_POOL_MAX_IDLE_TIME=1800000
-MODEL_POOL_CLEANUP_INTERVAL=300000
-
-# Provider Configuration (Optional)
-SAP_AICORE_PROVIDER_PREFIX=sap-aicore
-
-# API Endpoint Defaults (Optional)
-ANTHROPIC_DEFAULT_VERSION=bedrock-2023-05-31
-ANTHROPIC_DEFAULT_ENDPOINT=/invoke
-GEMINI_DEFAULT_ENDPOINT=/models/gemini-2.5-flash:generateContent
-GENERIC_DEFAULT_ENDPOINT=
-
-# Body Size Limits (Optional)
-BODY_LIMIT_JSON=50mb
-BODY_LIMIT_URLENCODED=50mb
-BODY_LIMIT_RAW=50mb
-```
-
-**Important**:
-
-- Client ID should be in double quotes
-- Client secret should be in single quotes to handle special characters
-- All server configuration is optional with sensible defaults
-- **Configuration Validation**: The server validates all configurations on startup and reports any issues
+### Custom API Key System
+- **Format**: `sk-proj-[43-character-base64url-string]`
+- **Example**: `sk-proj-KEiBe1MO4JWCQLKfwZFO06G5OPlJR0rSxgqGgF6A9hI`
+- **Auto-generated**: API key is created automatically on first startup
+- **Security**: Constant-time validation prevents timing attacks
 
 ---
 
-## 📱 Client Configuration
+## 🚀 Performance Features
 
-Configure your OpenAI-compatible AI client with these settings:
+### Optimization
+- **True Streaming**: Real-time token streaming (GPT-5 nano)
+- **Mock Streaming**: Compatibility layer for non-streaming models
+- **Zero Process Spawning**: Model instances pooled and reused
+- **Automatic Cleanup**: Idle instances cleaned after 30 minutes
+- **Real-time Monitoring**: Health checks with statistics
 
-- **API Host**: `http://localhost:3001`
-- **API Path**: `/v1`
-- **API Key**: `any-string-works`
-- **Model**: `gpt-5-nano` or `anthropic--claude-4-sonnet` or `gemini-2.5-flash`
-
-### Compatible AI Clients
-
-This proxy works with any OpenAI-compatible client. Here are some popular options:
-
-- **[Open WebUI](https://docs.openwebui.com/)** - A feature-rich web interface for AI models with support for multiple providers, document uploads, and advanced conversation management
-- **[Chatbox](https://chatboxai.app/)** - A cross-platform desktop AI client with a clean interface, conversation history, and support for multiple AI providers
-
-Simply configure these clients with the proxy settings above to access SAP AI Core models through a familiar interface.
-
----
-
-## 🛠️ Commands
-
-### Server Management
-
-- `npm start` - Start optimized proxy server with model pooling
-- `npm run dev` - Start proxy in development mode with hot reload
-- `npm run proxy` - Alias for `npm start`
-- `npm stop` - Stop the proxy server
-
-### Model Management
-
-- `./scripts/deploy-model.sh <model-name> [--make-config] [--help]` - Check model deployment status
-- `./scripts/list-deployed-models.sh [MODEL_NAME|/all] [--help]` - List deployed models
-
-### Monitoring
-
-- `curl http://localhost:3001/health` - Check server health and model pool statistics
-- `curl http://localhost:3001/v1/models` - List available models (OpenAI-compatible)
-
----
-
-## 🎯 Supported / Tested Models
-
-- ✅ `gpt-5-nano` - OpenAI GPT-5 nano (working via SAP AI Core provider) **🌊 True Streaming** ⚪ Text-only
-- ✅ `anthropic--claude-4-sonnet` - Anthropic Claude 4 Sonnet (working via direct API) **📦 Mock Streaming** **👁️ Vision**
-- ✅ `gemini-2.5-flash` - Google Gemini 2.5 Flash (working via direct API) **📦 Mock Streaming** **👁️ Vision**
-
-### Advanced Features
-
-- **True Streaming** (🌊): Real-time token-by-token streaming as the model generates responses
-- **Mock Streaming** (📦): Complete response sent as streaming chunks for compatibility
-- **Vision Support** (👁️): Claude 4 Sonnet and Gemini 2.5 Flash support image analysis and understanding
-- **Configuration Validation** (🔍): Comprehensive startup validation ensures all models are properly configured
+### Production Ready
+- **Thread-Safe Token Management**: Prevents authentication failures
+- **Configuration Validation**: Startup checks prevent deployment issues
+- **Memory Management**: Fixed footprint regardless of request volume
+- **Error Handling**: Graceful recovery with detailed logging
 
 ---
 
 ## 👁️ Vision Support
 
-**Claude 4 Sonnet** and **Gemini 2.5 Flash** support image analysis and understanding. Simply upload images in your AI client and select one of these models to analyze them:
+**Claude 4 Sonnet** and **Gemini 2.5 Flash** support image analysis:
 
 - **Supported formats**: PNG, JPG, JPEG, WebP, GIF
-- **Upload methods**: Direct image upload or base64 data URLs
-- **Multi-image**: Support for multiple images in a single conversation
-- **Format conversion**: Automatic conversion between OpenAI, Anthropic, and Google image formats
-
-### Vision Usage Examples
-
-```
-"What do you see in this image?"
-"Describe the colors and composition"
-"What text is visible in this screenshot?"
-"Compare these two images"
-```
+- **Upload methods**: Direct upload or base64 data URLs
+- **Multi-image support**: Multiple images per conversation
+- **Format conversion**: Automatic conversion between providers
 
 ---
 
 ## 📁 File Support
 
-The proxy provides comprehensive file handling capabilities for both text documents and images:
-
-### File Upload Support
-
-- **Text Files**: Automatic content extraction and processing for document analysis
-- **Image Files**: Full vision support with automatic format conversion
-- **Base64 Encoding**: Support for base64-encoded file data
-- **Multipart Forms**: Compatible with multipart/form-data uploads
-- **Large Files**: Configurable body size limits (default: 50MB)
-
 ### File Processing Features
-
-- **Intelligent Routing**: Automatically routes image files to vision-capable models
-- **Content Extraction**: Extracts text content from uploaded documents
-- **Format Detection**: Automatically detects and handles different file formats
-- **Error Handling**: Graceful fallback when files cannot be processed
-- **Model Compatibility**: Provides helpful suggestions when files require specific model capabilities
-
-### File Usage Examples
-
-```
-"Analyze this document and summarize the key points"
-"What does this image show?"
-"Extract the text from this screenshot"
-"Compare these two documents"
-```
-
-**Note**: When uploading images to text-only models (like GPT-5 nano), the proxy will automatically suggest using vision-capable models (Claude 4 Sonnet or Gemini 2.5 Flash) for proper image analysis.
-
----
-
-## 🔍 Model Management
-
-### Check Model Deployment Status
-
-```bash
-./scripts/deploy-model.sh gpt-5-nano
-<<<<<< dev
-```
-
-This will check if the model is deployed in SAP AI Core and show deployment details.
-
-### Generate Configuration File
-
-```bash
-./scripts/deploy-model.sh gpt-5-nano --make-config
-```
-
-This will generate `config/models.json` from all deployed models with generic placeholders that need manual configuration.
-
-### List Deployed Models
-
-```bash
-# List all deployed models with support indicators
-./scripts/list-deployed-models.sh
-
-# List only configured/supported models
-./scripts/list-deployed-models.sh /all
-
-# Search for specific model
-./scripts/list-deployed-models.sh gpt-5-nano
-
-# Show help
-./scripts/list-deployed-models.sh --help
-```
+- **Text Files**: Automatic content extraction for document analysis
+- **Image Files**: Full vision support with format conversion
+- **Base64 Encoding**: Support for base64-encoded data
+- **Large Files**: Configurable size limits (default: 50MB)
+- **Security Validation**: Content validation and sanitization
+- **Intelligent Routing**: Auto-routes images to vision-capable models
 
 ---
 
 ## 🏗️ Architecture
 
 ```text
-AI Client → Proxy Server → [Model Pool] → SAP AI Core → AI Models
-                        ↘ [Direct API] ↗
+AI Client → [Authentication] → [Security Middleware] → Proxy Server → SAP AI Core
+                ↓                      ↓                    ↓
+        [Rate Limiting]        [Input Validation]    [Model Pool]
 ```
 
 ### Key Features
-
-- **Model Pooling**: Reuses model instances per type for optimal performance
-- **Multi-Model Support**: GPT-5 nano, Claude 4 Sonnet, Gemini 2.5 Flash
-- **Intelligent Routing**: Automatic routing between provider and direct API models
-- **Enterprise Ready**: Thread-safe operations, graceful shutdown, monitoring
-
-### The proxy
-
-1. **Receives** OpenAI-compatible requests from AI clients
-2. **Validates** input and routes to appropriate handler
-3. **Authenticates** with SAP AI Core using OAuth (with caching)
-4. **Pools** model instances for performance optimization
-5. **Transforms** requests to SAP AI Core format
-6. **Returns** responses in OpenAI-compatible format
+- **Custom Authentication**: `sk-proj-*` API key system
+- **Security Hardening**: Complete security middleware stack
+- **Model Pooling**: Instance reuse for optimal performance
+- **Intelligent Routing**: Automatic routing between provider and direct API
+- **Thread-Safe Operations**: Race condition prevention
+- **Graceful Shutdown**: Proper resource cleanup
 
 ---
 
-## 🚀 Performance Features
+## ⚙️ Setup
 
-- **True Streaming Support**: Real-time token streaming for supported models (GPT-5 nano)
-- **Intelligent Streaming Fallback**: Mock streaming for non-streaming models (Claude, Gemini)
-- **Zero Process Spawning**: Model instances pooled and reused
-- **Thread-Safe Token Management**: Race condition prevention
-- **Automatic Cleanup**: Idle model instances cleaned up after 30 minutes
-- **Real-time Monitoring**: Health checks with model pool statistics
-- **Graceful Shutdown**: Proper resource cleanup on termination
+### Installation & Configuration
+
+**Complete setup guide**: [HOW_TO_INSTALL.md](./HOW_TO_INSTALL.md)
+
+The installation guide covers:
+- Development tools setup (Node.js, npm, git)
+- Project setup and dependency installation
+- Environment configuration with SAP AI Core credentials
+- Server startup and API key generation
+- Client configuration and testing
+
+### Quick Setup Summary
+
+1. **Install**: Follow [HOW_TO_INSTALL.md](./HOW_TO_INSTALL.md) for complete setup
+2. **Configure**: Set up `.env` with your SAP AI Core credentials
+3. **Start**: `npm start` (API key auto-generated on first run)
+4. **Connect**: Configure your AI client with the generated API key
 
 ---
 
-## 🔗 Related Projects
+## 📱 Client Configuration
 
-For alternative implementations and approaches to SAP AI Core integration, you may also be interested in:
+Configure your OpenAI-compatible AI client:
 
-- **[SAP AI Core Proxy](https://github.com/kaimerklein/sap-ai-core-proxy)** - Another SAP AI Core proxy implementation with different architectural choices
+- **API Host**: `http://localhost:3001`
+- **API Path**: `/v1`
+- **API Key**: Your custom API key (displayed on startup or in `.env.apikey`)
+- **Models**: `gpt-5-nano`, `anthropic--claude-4-sonnet`, `gemini-2.5-flash`
+
+### Compatible AI Clients
+
+- **[BoltAI](https://boltai.com/)** - Native macOS AI client with ChatGPT, Claude, and custom API support
+- **[Open WebUI](https://docs.openwebui.com/)** - Feature-rich web interface with document uploads
+- **[Chatbox](https://chatboxai.app/)** - Cross-platform desktop client
+- **[Cline (Claude Code)](https://docs.cline.bot/provider-config/claude-code)** - VS Code AI coding agent with custom API support
+- **Any OpenAI-compatible client**
+
+### Configuring Cline (Claude Code) with the Proxy
+
+You can configure [Cline](https://docs.cline.bot/) to use your SAP AI Core proxy for Claude models by creating a `.claude/settings.json` file:
+
+```json
+{
+  "env": {
+    "ANTHROPIC_MODEL": "anthropic--claude-4-sonnet",
+    "ANTHROPIC_SMALL_FAST_MODEL": "anthropic--claude-4-sonnet", 
+    "ANTHROPIC_AUTH_TOKEN": "your-proxy-api-key-here",
+    "ANTHROPIC_BASE_URL": "http://localhost:3001/"
+  }
+}
+```
+
+**Configuration Details:**
+- **ANTHROPIC_MODEL**: Use `anthropic--claude-4-sonnet` for the main Claude model
+- **ANTHROPIC_SMALL_FAST_MODEL**: Use the same model for fast responses
+- **ANTHROPIC_AUTH_TOKEN**: Replace with your custom API key from `.env.apikey`
+- **ANTHROPIC_BASE_URL**: Point to your running proxy server
+
+**Tutorial**: For detailed setup instructions, see [Cline's Claude Code documentation](https://docs.cline.bot/provider-config/claude-code).
+
+**Benefits of using the proxy with Cline:**
+- Access Claude 4 Sonnet through your SAP AI Core deployment
+- Vision support for image analysis in your coding projects
+- No additional API costs beyond your SAP AI Core usage
+- Enterprise-grade security with your custom authentication system
 
 ---
 
-## 📖 Detailed Documentation
+## 🛠️ Commands
 
-See [CLAUDE.md](./CLAUDE.md) for comprehensive documentation including:
+### Server Management
+- `npm start` - Start proxy server with security features
+- `npm run dev` - Start in development mode with hot reload
+- `npm stop` - Stop the proxy server
 
-- Technical implementation details
-- Troubleshooting guide
-- Architecture decisions
-- Lessons learned
+### API Key Management
+```bash
+# View your API key
+cat .env.apikey
+
+# Regenerate API key if needed
+rm .env.apikey && npm start
+```
+
+### Monitoring
+- `curl http://localhost:3001/health` - Server health and statistics
+- `curl -H "Authorization: Bearer your-api-key" http://localhost:3001/v1/models` - List models
+
+### Model Management
+- `./scripts/deploy-model.sh <model-name>` - Check model deployment status
+- `./scripts/list-deployed-models.sh` - List deployed models
+
+---
+
+## 🔧 Environment Configuration
+
+### Required Configuration
+```env
+# SAP AI Core (Required)
+AICORE_AUTH_URL=https://your-auth-url.hana.ondemand.com
+AICORE_CLIENT_ID="your-client-id"
+AICORE_CLIENT_SECRET="your-client-secret"
+AICORE_BASE_URL=https://api.ai.your-region.aws.ml.hana.ondemand.com
+```
+
+### Optional Security Configuration
+```env
+# Rate Limiting
+RATE_LIMIT_WINDOW_MS=900000          # 15 minutes
+RATE_LIMIT_MAX_REQUESTS=100          # Max requests per window
+AI_RATE_LIMIT_WINDOW_MS=300000       # 5 minutes for AI endpoints
+AI_RATE_LIMIT_MAX_REQUESTS=20        # Max AI requests per window
+
+# Input Validation
+MAX_MESSAGES_PER_REQUEST=50          # Max messages per request
+MAX_CONTENT_LENGTH=50000             # Max characters per message
+MAX_REQUEST_SIZE=52428800            # Max request size (50MB)
+
+# CORS Security
+ALLOWED_ORIGINS=http://localhost:3000,http://localhost:8080
+```
+
+### Optional Server Configuration
+```env
+# Server Settings
+PORT=3001
+HOST=localhost
+CORS_ORIGIN=*
+
+# Model Defaults
+DEFAULT_MODEL=gpt-5-nano
+DEFAULT_MAX_TOKENS=1000
+
+# Performance
+MODEL_POOL_MAX_IDLE_TIME=1800000
+MODEL_POOL_CLEANUP_INTERVAL=300000
+```
+
+**Note**: All optional settings have sensible defaults. See [HOW_TO_INSTALL.md](./HOW_TO_INSTALL.md) for complete configuration guide.
+
+---
+
+## 🏆 Production Ready
+
+The dev branch is **enterprise-ready** with:
+
+- ✅ **Security**: Custom authentication, rate limiting, security headers
+- ✅ **Performance**: Model pooling, streaming, memory management  
+- ✅ **Reliability**: Comprehensive test coverage (28 authentication tests)
+- ✅ **Monitoring**: Health checks and detailed statistics
+- ✅ **Documentation**: Complete guides and troubleshooting
+
+### Key Differences from Main Branch
+- **Custom Authentication System** with `sk-proj-*` API keys
+- **Security Hardening** with middleware stack
+- **Comprehensive Testing** with 28 authentication tests
+- **Enhanced Configuration** with additional security options
+- **Production Features** including monitoring and validation
+
+**See what's new**: Check [CHANGELOG.md](./CHANGELOG.md) for detailed feature evolution and recent updates.
+
+---
+
+## 📚 Documentation
+
+### Complete Guides
+- **[HOW_TO_INSTALL.md](./HOW_TO_INSTALL.md)** - Complete installation and setup guide
+- **[CLAUDE.md](./CLAUDE.md)** - Technical implementation details
+- **[CHANGELOG.md](./CHANGELOG.md)** - Version history and features
+- **[tests/AUTHENTICATION-TESTS.md](./tests/AUTHENTICATION-TESTS.md)** - Authentication system details
+
+### Development & Testing
+For development and testing information, see [tests/AUTHENTICATION-TESTS.md](./tests/AUTHENTICATION-TESTS.md).
+
+---
+
+## 📞 Support
+
+- **Setup Guide**: [HOW_TO_INSTALL.md](./HOW_TO_INSTALL.md)
+- **Bug Reports**: Use `/reportbug` in supported clients
+- **Technical Details**: [CLAUDE.md](./CLAUDE.md)
+- **Authentication Help**: [tests/AUTHENTICATION-TESTS.md](./tests/AUTHENTICATION-TESTS.md)
