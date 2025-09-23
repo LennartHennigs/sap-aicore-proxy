@@ -808,6 +808,7 @@ This update represents a complete architectural refactoring focused on eliminati
   - OpenAI-compatible API integration support
 
 ### Known Issues (Fixed in Current Update)
+
 - Process spawning per request (major performance issue)
 - Race conditions in token management
 - Hard-coded configuration values
