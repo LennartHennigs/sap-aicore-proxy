@@ -23,7 +23,8 @@ A high-performance, enterprise-grade proxy server that provides OpenAI-compatibl
 
 **Result**: Every OpenAI-compatible AI application becomes compatible with your SAP AI Core deployment.
 
----
+### 1. OpenAI-Compatible API (Default)
+**Endpoint:** `POST /v1/chat/completions`
 
 ## 🎯 Supported Models
 
@@ -39,7 +40,11 @@ A high-performance, enterprise-grade proxy server that provides OpenAI-compatibl
   - **📦 Mock Streaming** - Complete response sent as streaming chunks
   - **👁️ Vision Support** - Image analysis and understanding
 
----
+**All API formats work with all models:**
+- Use Claude format with Gemini models
+- Use Gemini format with Claude models  
+- Use OpenAI format with any model
+- Automatic format conversion between APIs
 
 ## 🔒 Security Features
 
@@ -185,7 +190,7 @@ You can configure [Cline](https://docs.cline.bot/) to use your SAP AI Core proxy
 - No additional API costs beyond your SAP AI Core usage
 - Enterprise-grade security with your custom authentication system
 
----
+## 🚀 Automatic Deployment ID Discovery
 
 ## 🛠️ Commands
 
@@ -280,7 +285,10 @@ The dev branch is **enterprise-ready** with:
 
 **See what's new**: Check [CHANGELOG.md](./CHANGELOG.md) for detailed feature evolution and recent updates.
 
----
+- Technical implementation details
+- Troubleshooting guide
+- Architecture decisions
+- Lessons learned
 
 ## 📚 Documentation
 

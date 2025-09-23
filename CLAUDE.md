@@ -30,8 +30,7 @@ This is a production-ready proxy server that provides OpenAI-compatible API acce
 The [config/models.json](./config/models.json) file defines supported models:
 
 ```typescript
-interface ModelConfig {
-  deploymentId: string;          // SAP AI Core deployment ID
+interface ModelConfig 
   provider: string;              // e.g., "anthropic", "sap-aicore", "google"
   supportsStreaming: boolean;    // True streaming capability
   supportsVision?: boolean;      // Image processing support
@@ -50,6 +49,76 @@ See [.env.example](./.env.example) for configuration options:
 - **Server Config**: `PORT`, `HOST`, `CORS_ORIGIN`
 - **Model Defaults**: `DEFAULT_MODEL`, `DEFAULT_MAX_TOKENS`
 - **Performance**: `MODEL_POOL_MAX_IDLE_TIME`, `MODEL_POOL_CLEANUP_INTERVAL`
+- **Deployment ID Overrides**: `GPT_5_NANO_DEPLOYMENT_ID`, `ANTHROPIC_CLAUDE_4_SONNET_DEPLOYMENT_ID`, `GEMINI_2_5_FLASH_DEPLOYMENT_ID`
+
+## Automatic Deployment ID Discovery
+
+### Discovery Service Architecture
+
+The [src/services/deployment-discovery.ts](./src/services/deployment-discovery.ts) provides automatic deployment ID resolution:
+
+```typescript
+interface DeploymentDiscoveryService {
+  // Core discovery functionality
+  discoverDeployments(): Promise<DiscoveryResult>;
+  getDeploymentId(modelName: string): Promise<string | null>;
+  
+  // Validation and caching
+  validateAllModels(modelNames: string[]): Promise<ValidationResult>;
+  clearCache(): void;
+}
+```
+
+### Discovery Process Flow
+
+1. **Startup Discovery**:
+   - Queries SAP AI Core `/v2/lm/deployments?scenarioId=foundation-models`
+   - Maps deployed model names to configured model names
+   - Caches results for 5-minute intervals
+
+2. **Environment Variable Priority**:
+
+   ```bash
+   # Check environment override first
+   GPT_5_NANO_DEPLOYMENT_ID=custom-id
+   
+   # Fallback to auto-discovered ID
+   # Finally fallback to config deploymentId (if present)
+   ```
+
+3. **Intelligent Mapping**:
+
+   ```typescript
+   // Maps SAP AI Core model names to proxy model names
+   const modelNameMapping = {
+     "gpt-5-nano": "gpt-5-nano",
+     "claude-4-sonnet": "anthropic--claude-4-sonnet", 
+     "gemini-2.5-flash": "gemini-2.5-flash"
+   };
+   ```
+
+### Error Handling Strategy
+
+- **API Failures**: Graceful degradation with clear error messages
+- **Missing Deployments**: Specific guidance on environment variable overrides
+- **Authentication Issues**: Token refresh and retry logic
+- **Cache Expiry**: Automatic refresh with fallback to cached values
+
+### Environment Variable Generation
+
+The system automatically generates environment variable names from model names:
+
+```typescript
+// "gpt-5-nano" → "GPT_5_NANO_DEPLOYMENT_ID"
+// "anthropic--claude-4-sonnet" → "ANTHROPIC_CLAUDE_4_SONNET_DEPLOYMENT_ID"
+function getEnvVarName(modelName: string): string {
+  return modelName
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, '_')
+    .replace(/_+/g, '_')
+    .replace(/^_|_$/g, '') + '_DEPLOYMENT_ID';
+}
+```
 
 ## Request Processing Flow
 
@@ -109,18 +178,19 @@ if (modelRouter.useDirectAPI(model)) {
 
 ### Adding New Models
 
-1. **Update Configuration**:
+1. **Update Configuration** (deployment ID is now optional):
+
 ```json
 // config/models.json
 {
   "new-model": {
-    "deploymentId": "your-deployment-id",
     "provider": "provider-name",
     "supportsStreaming": false,
     "supportsVision": true,
     "apiType": "direct",
     "endpoint": "/your-endpoint",
     "description": "Model description"
+    // deploymentId will be auto-discovered
   }
 }
 ```
@@ -132,6 +202,15 @@ if (modelRouter.useDirectAPI(model)) {
   "directApiModels": ["anthropic--claude-4-sonnet", "new-model"]
 }
 ```
+
+3. **Optional Environment Override**:
+
+```bash
+# .env file (optional for specific deployments)
+NEW_MODEL_DEPLOYMENT_ID=your-specific-deployment-id
+```
+
+The system will automatically discover the deployment ID from SAP AI Core based on the model name.
 
 ### Request Format Conversions
 
@@ -235,10 +314,16 @@ The proxy validates all configurations on startup:
 ### Common Issues
 
 1. **Model Not Found**: Check [config/models.json](./config/models.json) for model definition
-2. **Vision Errors**: Verify model supports vision in configuration
-3. **Streaming Issues**: Check model's `supportsStreaming` setting  
-4. **Authentication**: Verify `.env` credentials and token refresh
-5. **Format Errors**: Check request format matches expected provider format
+2. **Deployment ID Missing**: 
+   - Check if model is deployed in SAP AI Core using `./scripts/list-deployed-models.sh`
+   - Set environment override: `MODEL_NAME_DEPLOYMENT_ID=your-deployment-id`
+   - Verify model name mapping in discovery service
+3. **Vision Errors**: Verify model supports vision in configuration
+4. **Streaming Issues**: Check model's `supportsStreaming` setting  
+5. **Authentication**: Verify `.env` credentials and token refresh
+6. **Discovery Failures**: Check SAP AI Core API connectivity and permissions
+7. **Format Errors**: Check request format matches expected provider format
+
 
 ### Debug Endpoints
 - `GET /health` - Server status and model pool statistics
