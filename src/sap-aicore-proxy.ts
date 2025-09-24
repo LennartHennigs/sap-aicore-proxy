@@ -2,6 +2,9 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
+import { readFileSync } from 'fs';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
 import { config } from './config/app-config.js';
 import { modelRouter } from './models/model-router.js';
 import { directApiHandler } from './handlers/direct-api-handler.js';
@@ -16,6 +19,12 @@ import {
   sanitizeInput, 
   validateContentLength 
 } from './middleware/validation.js';
+
+// Get version from package.json
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const packageJson = JSON.parse(readFileSync(join(__dirname, '../package.json'), 'utf8'));
+const VERSION = packageJson.version;
 
 const app = express();
 
@@ -557,6 +566,7 @@ app.post('/v1/chat/completions',
 app.get('/health', (req, res) => {
   res.json({
     status: 'OK',
+    version: VERSION,
     timestamp: new Date().toISOString(),
     models: {
       available: modelRouter.getAllModels(),
@@ -1008,7 +1018,7 @@ app.post('/v1/models/:model\\:generateContent', async (req, res) => {
 
 // Start server
 const server = app.listen(config.server.port, config.server.host, async () => {
-  console.log(`🚀 SAP AI Core proxy running at http://${config.server.host}:${config.server.port}`);
+  console.log(`🚀 v${VERSION}`);
   
   // Validate all model configurations on startup
   try {
