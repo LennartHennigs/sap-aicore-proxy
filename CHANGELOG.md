@@ -5,6 +5,60 @@ All notable changes to the SAP AI Core Proxy project will be documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased] - 2025-09-24
+
+### 🚀 Enhanced Process Management & Version Display
+
+### Added
+
+#### 📋 Version Display
+- **Startup Version Display**: Added version number to server startup message format: `🚀 SAP AI Core proxy - v1.2.0 running at http://localhost:3001`
+- **Health Endpoint Version**: Added version field to `/health` endpoint response for monitoring and debugging
+- **Dynamic Version Reading**: Version automatically synced from `package.json` ensuring consistency
+
+#### 🔒 Single Instance Enforcement
+- **PID File Management**: Implemented robust PID file system to prevent multiple server instances
+- **Process Validation**: Added startup check to detect and prevent duplicate instances
+- **Graceful Shutdown Integration**: Enhanced shutdown handlers to properly clean up PID files
+- **Improved Stop Script**: Updated `npm run stop` to use PID-based termination instead of process name matching
+
+#### 🛡️ Process Reliability
+- **Stale PID Handling**: Automatic cleanup of stale PID files from crashed processes
+- **Error Recovery**: Robust error handling for PID file operations and process management
+- **Cross-Platform Support**: PID file solution works on macOS, Linux, and Windows
+- **Resource Protection**: Prevents port conflicts and resource contention from multiple instances
+
+### Changed
+
+#### 🔧 Process Management
+- **Stop Command**: Enhanced `npm run stop` with PID-based process termination and better error handling
+- **Startup Validation**: Added pre-startup instance detection with clear error messaging
+- **Shutdown Logging**: Improved shutdown process logging with PID file cleanup confirmation
+
+### Fixed
+
+#### 🐛 Process Management Issues
+- **Multiple Instance Prevention**: Eliminated ability to accidentally start multiple server instances
+- **Port Binding Conflicts**: Prevented port conflicts from duplicate server processes
+- **Resource Cleanup**: Ensured proper cleanup of PID files during all shutdown scenarios
+- **Stop Script Reliability**: Fixed stop script to work correctly with actual process names
+
+### Technical Details
+
+#### Implementation
+- **PID File Location**: `sap-aicore-proxy.pid` in project root directory
+- **Process Detection**: Uses `process.kill(pid, 0)` for reliable process existence checking
+- **Graceful Termination**: SIGTERM-based shutdown with proper resource cleanup
+- **Error Handling**: Comprehensive error handling for all PID file operations
+
+#### Benefits
+- **Prevents Resource Conflicts**: Only one instance can bind to configured port
+- **Clean Process Management**: Reliable start/stop operations with proper cleanup
+- **Development Friendly**: Clear error messages guide developers when instances are already running
+- **Production Ready**: Robust process management suitable for production deployments
+
+---
+
 ## [1.2.1] - 2025-09-23
 
 ### 🐛 Critical Bug Fix: Claude Native API Authentication
