@@ -7,7 +7,7 @@
   "scripts": {
     "start": "node --import=tsx --env-file=.env ./src/sap-aicore-proxy.ts",
     "proxy": "node --import=tsx --env-file=.env ./src/sap-aicore-proxy.ts",
-    "stop": "pkill -f 'chatbox-proxy' || echo 'No proxy process found'",
+    "stop": "node -e \"const fs = require('fs'); const path = require('path'); const pidFile = path.join(__dirname, 'sap-aicore-proxy.pid'); if (fs.existsSync(pidFile)) { const pid = parseInt(fs.readFileSync(pidFile, 'utf8').trim()); try { process.kill(pid, 'SIGTERM'); console.log('✅ SAP AI Core proxy stopped (PID: ' + pid + ')'); setTimeout(() => { if (fs.existsSync(pidFile)) { fs.unlinkSync(pidFile); console.log('🗑️ Cleaned up PID file'); } }, 1000); } catch (e) { console.log('⚠️ Process not found, removing stale PID file'); try { fs.unlinkSync(pidFile); } catch (unlinkErr) { /* ignore */ } } } else { console.log('ℹ️ No running instance found'); }\"",
     "deploy-model": "./scripts/deploy-model.sh",
     "dev": "node --import=tsx --env-file=.env --watch ./src/sap-aicore-proxy.ts",
     "test": "node --import=tsx --env-file=.env ./tests/proxy-test-suite.ts",

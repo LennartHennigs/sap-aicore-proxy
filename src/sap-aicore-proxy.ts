@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
-import { readFileSync } from 'fs';
+import { readFileSync, writeFileSync, unlinkSync, existsSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { config } from './config/app-config.js';
@@ -25,6 +25,75 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const packageJson = JSON.parse(readFileSync(join(__dirname, '../package.json'), 'utf8'));
 const VERSION = packageJson.version;
+
+// PID file management
+const PID_FILE = join(__dirname, '../sap-aicore-proxy.pid');
+
+function checkExistingInstance(): boolean {
+  if (!existsSync(PID_FILE)) {
+    return false;
+  }
+
+  try {
+    const pidString = readFileSync(PID_FILE, 'utf8').trim();
+    const pid = parseInt(pidString, 10);
+    
+    if (isNaN(pid)) {
+      // Invalid PID file, remove it
+      unlinkSync(PID_FILE);
+      return false;
+    }
+
+    // Check if process is still running
+    try {
+      process.kill(pid, 0); // Signal 0 checks if process exists without killing it
+      return true; // Process is running
+    } catch (error) {
+      // Process is not running, remove stale PID file
+      unlinkSync(PID_FILE);
+      return false;
+    }
+  } catch (error) {
+    // Error reading PID file, assume no instance running
+    try {
+      unlinkSync(PID_FILE);
+    } catch (unlinkError) {
+      // Ignore unlink errors
+    }
+    return false;
+  }
+}
+
+function createPidFile(): void {
+  try {
+    writeFileSync(PID_FILE, process.pid.toString(), 'utf8');
+    console.log(`🔒 PID file created: ${PID_FILE} (PID: ${process.pid})`);
+  } catch (error) {
+    console.error('❌ Failed to create PID file:', error);
+    process.exit(1);
+  }
+}
+
+function removePidFile(): void {
+  try {
+    if (existsSync(PID_FILE)) {
+      unlinkSync(PID_FILE);
+      console.log('🗑️ PID file removed');
+    }
+  } catch (error) {
+    console.error('⚠️ Failed to remove PID file:', error);
+  }
+}
+
+// Check for existing instance before starting
+if (checkExistingInstance()) {
+  console.error('❌ Another instance of SAP AI Core proxy is already running!');
+  console.error('   Use "npm run stop" to stop the existing instance first.');
+  process.exit(1);
+}
+
+// Create PID file for this instance
+createPidFile();
 
 const app = express();
 
@@ -1052,19 +1121,36 @@ const server = app.listen(config.server.port, config.server.host, async () => {
 
 // Graceful shutdown
 process.on('SIGTERM', () => {
+  console.log('🛑 Received SIGTERM, shutting down gracefully...');
   SecureLogger.logServerShutdown();
   modelPool.shutdown();
   server.close(() => {
+    removePidFile();
     SecureLogger.logServerClosed();
     process.exit(0);
   });
 });
 
 process.on('SIGINT', () => {
+  console.log('🛑 Received SIGINT, shutting down gracefully...');
   SecureLogger.logServerShutdown();
   modelPool.shutdown();
   server.close(() => {
+    removePidFile();
     SecureLogger.logServerClosed();
     process.exit(0);
   });
+});
+
+// Handle uncaught exceptions and unhandled rejections
+process.on('uncaughtException', (error) => {
+  console.error('❌ Uncaught Exception:', error);
+  removePidFile();
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
+  removePidFile();
+  process.exit(1);
 });
