@@ -5,7 +5,38 @@ All notable changes to the SAP AI Core Proxy project will be documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased] - 2025-09-24
+## [Unreleased] - 2025-09-25
+
+### 🔒 Security Fix: Sensitive File Removal
+
+### Security
+
+#### 🛡️ Repository Security Hardening
+- **Sensitive File Removal**: Completely removed `.env.apikey` file from git history to prevent API key exposure
+- **Git History Cleanup**: Used `git filter-repo` to eliminate all traces of sensitive files from version control
+- **Security Audit**: Verified no other sensitive files are tracked in the repository
+- **Proper Gitignore**: Confirmed `.env.apikey` and other sensitive files are properly ignored
+
+#### 🧹 Repository Cleanup
+- **History Rewrite**: Rewrote git history to remove sensitive data from all commits
+- **Remote Update**: Force-pushed cleaned history to remove sensitive files from remote repository
+- **File Verification**: Ensured only appropriate files (like `.env.example`) remain tracked
+
+### Technical Details
+
+#### Security Impact
+- **API Key Protection**: Eliminated risk of API key exposure through git history
+- **Clean Repository**: Repository now follows security best practices for sensitive data
+- **History Integrity**: Maintained project history while removing only sensitive content
+
+#### Implementation
+- Used `git filter-repo --path .env.apikey --invert-paths --force` for complete removal
+- Verified removal with `git log --all --full-history -- .env.apikey` (no results)
+- Updated remote repository with cleaned history
+
+---
+
+## [1.2.2] - 2025-09-24
 
 ### 🚀 Enhanced Process Management & Version Display
 
