@@ -20,6 +20,17 @@ function extractBearerToken(authHeader: string | undefined): string | null {
 }
 
 /**
+ * Format IP address for logging (convert IPv6 localhost to IPv4)
+ */
+function formatIpForLogging(ip: string): string {
+  // Convert IPv6 localhost (::1) to IPv4 localhost (127.0.0.1) for better readability
+  if (ip === '::1') {
+    return '127.0.0.1';
+  }
+  return ip;
+}
+
+/**
  * API Key Authentication Middleware
  * Validates OpenAI-compatible Bearer token authentication
  */
@@ -35,7 +46,7 @@ export const authenticateApiKey = (req: Request, res: Response, next: NextFuncti
 
   // Check if API key is provided
   if (!providedKey) {
-    SecureLogger.logSecurityEvent('Authentication failed', `Missing API key from ${req.ip} on ${req.path}`);
+    SecureLogger.logSecurityEvent('Authentication failed', `Missing API key from ${formatIpForLogging(req.ip)}`);
     
     return res.status(401).json({
       error: {
@@ -50,7 +61,7 @@ export const authenticateApiKey = (req: Request, res: Response, next: NextFuncti
   const isValid = ApiKeyManager.validateApiKey(providedKey);
   
   if (!isValid) {
-    SecureLogger.logSecurityEvent('Authentication failed', `Invalid API key from ${req.ip} on ${req.path}`);
+    SecureLogger.logSecurityEvent('Authentication failed', `Invalid API key from ${formatIpForLogging(req.ip)}`);
     
     return res.status(401).json({
       error: {
@@ -61,9 +72,6 @@ export const authenticateApiKey = (req: Request, res: Response, next: NextFuncti
     });
   }
 
-  // Log successful authentication (without exposing the key)
-  SecureLogger.logSecurityEvent('Authentication successful', `Valid API key from ${req.ip} on ${req.path}`);
-  
   // Authentication successful, proceed to next middleware
   next();
 };

@@ -1106,10 +1106,10 @@ const server = app.listen(config.server.port, config.server.host, async () => {
   }
   
   console.log(`📡 Configure your AI client with:`);
-  console.log(`\x1b[1m\x1b[37m   • API Host: http://${config.server.host}:${config.server.port}\x1b[0m`);
-  console.log(`\x1b[1m\x1b[37m   • API Path: /v1\x1b[0m`);
-  console.log(`\x1b[1m\x1b[37m   • API Key: ${ApiKeyManager.getApiKey()}\x1b[0m`);
-  console.log(`\x1b[1m\x1b[37m   • Available Models: ${modelRouter.getAllModels().join(', ')}\x1b[0m`);
+  console.log(`   • API Host: \x1b[1m\x1b[37mhttp://${config.server.host}:${config.server.port}\x1b[0m`);
+  console.log(`   • API Path: \x1b[1m\x1b[37m/v1\x1b[0m`);
+  console.log(`   • API Key:  \x1b[1m\x1b[37m${ApiKeyManager.getApiKey()}\x1b[0m`);
+  console.log(`   • Models:   \x1b[1m\x1b[37m${modelRouter.getAllModels().join(', ')}\x1b[0m`);
   
   // Preload provider-supported models for better performance
   const providerModels = modelRouter.getProviderSupportedModels();
