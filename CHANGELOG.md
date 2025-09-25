@@ -39,6 +39,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Test Configuration**: Updated test configuration to work with production authentication
 - **PID File Support**: Added proper PID file handling for single-instance enforcement
 
+#### 📚 Documentation Improvements (PR #4)
+- **NVM Installation Guide**: Updated HOW_TO_INSTALL.md to use Node Version Manager (NVM) instead of static npm version
+- **Node Version Pinning**: Added `.node-version` file to pin the required Node.js version for consistent development environment
+- **Improved Setup Process**: Enhanced installation instructions for better developer experience and environment consistency
+
 ### Technical Details
 
 #### Security Impact
