@@ -41,8 +41,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### 📚 Documentation Improvements (PR #4)
 - **NVM Installation Guide**: Updated HOW_TO_INSTALL.md to use Node Version Manager (NVM) instead of static npm version
-- **Node Version Pinning**: Added `.node-version` file to pin the required Node.js version for consistent development environment
-- **Improved Setup Process**: Enhanced installation instructions for better developer experience and environment consistency
+- **Node Version Pinning**: Added `.node-version` file to pin the required Node.js version for consistent development
+  environment
+- **Improved Setup Process**: Enhanced installation instructions for better developer experience and environment
+  consistency
 
 ### Technical Details
 
@@ -68,7 +70,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 #### 📋 Version Display
-- **Startup Version Display**: Added version number to server startup message format: `🚀 SAP AI Core proxy - v1.2.0 running at http://localhost:3001`
+- **Startup Version Display**: Added version number to server startup message format:
+  `🚀 SAP AI Core proxy - v1.2.0 running at http://localhost:3001`
 - **Health Endpoint Version**: Added version field to `/health` endpoint response for monitoring and debugging
 - **Dynamic Version Reading**: Version automatically synced from `package.json` ensuring consistency
 
@@ -119,7 +122,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### 🐛 Critical Bug Fix: Claude Native API Authentication
 
-This patch release fixes a critical authentication issue that prevented Claude native API access after the v1.2.0 security hardening.
+This patch release fixes a critical authentication issue that prevented Claude native API access after the v1.2.0
+security hardening.
 
 ### Fixed
 
@@ -138,7 +142,8 @@ This patch release fixes a critical authentication issue that prevented Claude n
 ### Technical Details
 
 #### Root Cause
-The v1.2.0 security hardening introduced strict API key validation that broke Claude's native API access. The server was using production authentication middleware instead of development-friendly authentication.
+The v1.2.0 security hardening introduced strict API key validation that broke Claude's native API access.
+The server was using production authentication middleware instead of development-friendly authentication.
 
 #### Solution
 - Switched from `authenticateApiKey` to `authenticateApiKeyDev` middleware
@@ -154,7 +159,8 @@ The v1.2.0 security hardening introduced strict API key validation that broke Cl
 
 ### Migration Guide
 
-No migration required - this is a backward-compatible fix that restores v1.1.0 behavior while maintaining v1.2.0 security features.
+No migration required - this is a backward-compatible fix that restores v1.1.0 behavior while maintaining v1.2.0
+security features.
 
 ---
 
@@ -175,14 +181,14 @@ This major feature release represents the complete evolution of the SAP AI Core 
 
 #### 🔒 Enterprise Security Hardening
 - Security headers including CSP, HSTS, and clickjacking protection via Helmet.js
-- Rate limiting with DoS protection and configurable per-IP limits  
+- Rate limiting with DoS protection and configurable per-IP limits
 - Input validation with request sanitization and comprehensive validation
 - Secure logging with token sanitization to prevent information disclosure
 - CORS security with configurable origin control and desktop client support
 
 #### 🧪 Comprehensive Test Suite (28 Tests)
 - API Key Manager Tests: 8/8 tests (100% success rate)
-- Authentication Middleware Tests: 8/8 tests (100% success rate)  
+- Authentication Middleware Tests: 8/8 tests (100% success rate)
 - Authentication Flow Tests: 4/4 tests (100% success rate)
 - Complex Integration Tests: 6/8 tests (75% success rate - environment dependent)
 - Overall Success Rate: 26/28 tests (93% success rate)
