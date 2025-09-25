@@ -12,12 +12,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Security
 
 #### 🛡️ Repository Security Hardening
+
 - **Sensitive File Removal**: Completely removed `.env.apikey` file from git history to prevent API key exposure
 - **Git History Cleanup**: Used `git filter-repo` to eliminate all traces of sensitive files from version control
 - **Security Audit**: Verified no other sensitive files are tracked in the repository
 - **Proper Gitignore**: Confirmed `.env.apikey` and other sensitive files are properly ignored
 
 #### 🧹 Repository Cleanup
+
 - **History Rewrite**: Rewrote git history to remove sensitive data from all commits
 - **Remote Update**: Force-pushed cleaned history to remove sensitive files from remote repository
 - **File Verification**: Ensured only appropriate files (like `.env.example`) remain tracked
@@ -25,21 +27,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 #### 🔧 Authentication System Improvements
+
 - **Production Authentication**: Removed development environment settings for cleaner production deployment
 - **Authentication Middleware**: Streamlined authentication logic by removing development-specific code paths
 - **Code Cleanup**: Removed 52 lines of development-only authentication code for better maintainability
 
 #### 📝 Enhanced Logging
+
 - **Improved Log Output**: Enhanced logging in authentication middleware for better debugging and monitoring
 - **Server Logging**: Improved startup and operational logging in main proxy server
 - **Better Error Messages**: More descriptive logging for authentication and server operations
 
 #### 🧪 Test Suite Maintenance
+
 - **Test Cleanup**: Removed obsolete test files and cleaned up test structure
 - **Test Configuration**: Updated test configuration to work with production authentication
 - **PID File Support**: Added proper PID file handling for single-instance enforcement
 
 #### 📚 Documentation Improvements (PR #4)
+
 - **NVM Installation Guide**: Updated HOW_TO_INSTALL.md to use Node Version Manager (NVM) instead of static npm version
 - **Node Version Pinning**: Added `.node-version` file to pin the required Node.js version for consistent development
   environment
@@ -49,12 +55,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Technical Details
 
 #### Security Impact
+
 - **API Key Protection**: Eliminated risk of API key exposure through git history
 - **Clean Repository**: Repository now follows security best practices for sensitive data
 - **History Integrity**: Maintained project history while removing only sensitive content
 - **Production Ready**: Removed development-specific code for cleaner production deployment
 
 #### Implementation
+
 - Used `git filter-repo --path .env.apikey --invert-paths --force` for complete removal
 - Verified removal with `git log --all --full-history -- .env.apikey` (no results)
 - Updated remote repository with cleaned history
@@ -70,18 +78,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 #### 📋 Version Display
+
 - **Startup Version Display**: Added version number to server startup message format:
   `🚀 SAP AI Core proxy - v1.2.0 running at http://localhost:3001`
 - **Health Endpoint Version**: Added version field to `/health` endpoint response for monitoring and debugging
 - **Dynamic Version Reading**: Version automatically synced from `package.json` ensuring consistency
 
 #### 🔒 Single Instance Enforcement
+
 - **PID File Management**: Implemented robust PID file system to prevent multiple server instances
 - **Process Validation**: Added startup check to detect and prevent duplicate instances
 - **Graceful Shutdown Integration**: Enhanced shutdown handlers to properly clean up PID files
 - **Improved Stop Script**: Updated `npm run stop` to use PID-based termination instead of process name matching
 
 #### 🛡️ Process Reliability
+
 - **Stale PID Handling**: Automatic cleanup of stale PID files from crashed processes
 - **Error Recovery**: Robust error handling for PID file operations and process management
 - **Cross-Platform Support**: PID file solution works on macOS, Linux, and Windows
@@ -90,6 +101,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 #### 🔧 Process Management
+
 - **Stop Command**: Enhanced `npm run stop` with PID-based process termination and better error handling
 - **Startup Validation**: Added pre-startup instance detection with clear error messaging
 - **Shutdown Logging**: Improved shutdown process logging with PID file cleanup confirmation
@@ -97,6 +109,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 #### 🐛 Process Management Issues
+
 - **Multiple Instance Prevention**: Eliminated ability to accidentally start multiple server instances
 - **Port Binding Conflicts**: Prevented port conflicts from duplicate server processes
 - **Resource Cleanup**: Ensured proper cleanup of PID files during all shutdown scenarios
@@ -105,12 +118,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Technical Details
 
 #### Implementation
+
 - **PID File Location**: `sap-aicore-proxy.pid` in project root directory
 - **Process Detection**: Uses `process.kill(pid, 0)` for reliable process existence checking
 - **Graceful Termination**: SIGTERM-based shutdown with proper resource cleanup
 - **Error Handling**: Comprehensive error handling for all PID file operations
 
 #### Benefits
+
 - **Prevents Resource Conflicts**: Only one instance can bind to configured port
 - **Clean Process Management**: Reliable start/stop operations with proper cleanup
 - **Development Friendly**: Clear error messages guide developers when instances are already running
@@ -128,12 +143,14 @@ security hardening.
 ### Fixed
 
 #### 🔧 Authentication Compatibility
+
 - **Claude Native API Access**: Fixed authentication failure on `/v1/messages` endpoint that broke Claude integration
 - **Development Mode Support**: Enabled `authenticateApiKeyDev` middleware for backward compatibility with v1.1.0
 - **Legacy Key Support**: Restored support for `any-string-works` development key in development mode
 - **Proper API Key Support**: Maintained support for enterprise `sk-proj-*` API keys
 
 #### 🧪 Test Coverage
+
 - **Claude Native API Tests**: Added comprehensive test suite for `/v1/messages` endpoint
 - **Authentication Scenarios**: Added tests for development key, proper API key, and invalid key scenarios
 - **Backward Compatibility**: Added tests to ensure v1.1.0 behavior is maintained
@@ -142,15 +159,18 @@ security hardening.
 ### Technical Details
 
 #### Root Cause
+
 The v1.2.0 security hardening introduced strict API key validation that broke Claude's native API access.
 The server was using production authentication middleware instead of development-friendly authentication.
 
 #### Solution
+
 - Switched from `authenticateApiKey` to `authenticateApiKeyDev` middleware
 - Added `NODE_ENV=development` to enable legacy key support
 - Updated test configuration to use development authentication
 
 #### Verification
+
 - ✅ All authentication tests pass (24/24 - 100%)
 - ✅ Claude native API tests pass (6/6 - 100%)
 - ✅ Full proxy test suite maintains high success rate
@@ -173,6 +193,7 @@ This major feature release represents the complete evolution of the SAP AI Core 
 ### Added
 
 #### 🔑 Custom Authentication System
+
 - OpenAI-Compatible API Keys with custom `sk-proj-*` format (51-character length)
 - Auto-generated keys with secure API key generation on first startup
 - Constant-time validation with timing attack prevention and secure key comparison
@@ -180,6 +201,7 @@ This major feature release represents the complete evolution of the SAP AI Core 
 - Secure storage with API keys stored using Unix 600 permissions
 
 #### 🔒 Enterprise Security Hardening
+
 - Security headers including CSP, HSTS, and clickjacking protection via Helmet.js
 - Rate limiting with DoS protection and configurable per-IP limits
 - Input validation with request sanitization and comprehensive validation
@@ -187,6 +209,7 @@ This major feature release represents the complete evolution of the SAP AI Core 
 - CORS security with configurable origin control and desktop client support
 
 #### 🧪 Comprehensive Test Suite (28 Tests)
+
 - API Key Manager Tests: 8/8 tests (100% success rate)
 - Authentication Middleware Tests: 8/8 tests (100% success rate)
 - Authentication Flow Tests: 4/4 tests (100% success rate)
@@ -194,12 +217,14 @@ This major feature release represents the complete evolution of the SAP AI Core 
 - Overall Success Rate: 26/28 tests (93% success rate)
 
 #### 📚 Complete Documentation Suite
+
 - Features-first README.md with clear setup instructions
 - HOW_TO_INSTALL.md complete installation and configuration guide
 - AUTHENTICATION-TESTS.md comprehensive authentication system documentation
 - Cline integration with complete setup guide for VS Code AI coding agent
 
 #### 🎨 Universal AI Client Compatibility
+
 - BoltAI native macOS client with custom API support (featured first)
 - Open WebUI feature-rich web interface with document uploads
 - Chatbox cross-platform desktop client
@@ -209,12 +234,14 @@ This major feature release represents the complete evolution of the SAP AI Core 
 ### Changed
 
 #### 🏗️ Architecture Enhancements
+
 - Model Pool System with instance reuse eliminates process spawning
 - Thread-Safe Operations with race condition prevention in token management
 - Memory Management with fixed footprint regardless of request volume
 - Graceful Shutdown with proper resource cleanup on termination
 
 #### 📖 Documentation Structure
+
 - Features-First README leading with capabilities and benefits
 - Simple Explanation with clear value proposition for universal OpenAI compatibility
 - Dedicated Setup Section with clean separation of features vs installation
@@ -223,6 +250,7 @@ This major feature release represents the complete evolution of the SAP AI Core 
 ### Fixed
 
 #### 🐛 Critical Production Issues
+
 - TypeScript Errors resolved boolean type validation issues
 - Authentication Failures fixed SAP AI Core provider token transmission
 - Streaming Issues restored proper streaming for all models
@@ -232,6 +260,7 @@ This major feature release represents the complete evolution of the SAP AI Core 
 ### Security
 
 #### 🛡️ Production Security Features
+
 - Custom Authentication enterprise-grade API key system
 - Input Sanitization comprehensive request validation and cleaning
 - Rate Limiting DoS protection with tiered limits
@@ -241,6 +270,7 @@ This major feature release represents the complete evolution of the SAP AI Core 
 ### Performance
 
 #### ⚡ Production Performance
+
 - True Streaming real-time token streaming for GPT-5 nano
 - Mock Streaming compatibility streaming for Claude and Gemini
 - Zero Process Spawning model instance pooling after initialization
