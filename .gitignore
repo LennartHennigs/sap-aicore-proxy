@@ -20,6 +20,9 @@ vite.config.ts.timestamp*
 .env.test.local
 .env.production.local
 .env.local
+.sap-aicore-proxy
+
+*.pid 
 
 # SAP AI Core credentials
 ai-core-key.json
