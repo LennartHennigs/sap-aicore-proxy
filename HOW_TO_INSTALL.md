@@ -16,7 +16,7 @@ Install Homebrew (Apple Silicon) and set up your shell environment
 Add Homebrew to your PATH
 (the installer will show the exact commands)
 
-``` shell
+```shell
 follow the step shown by brew
 ```
 
@@ -39,11 +39,35 @@ cd
 cd Documents
 ```
 
-## 4. Install Node.js
+## 4. Install NVM and Node.js (Recommended)
+
+Install NVM (Node Version Manager):
 
 ```shell
-brew install node
-brew upgrade node
+# Install nvm
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+
+# Initialize nvm for your shell (zsh on macOS by default)
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+[ -s "$NVM_DIR/bash_completion" ] && . "$NVM_DIR/bash_completion"
+
+# Reload your shell configuration if needed
+source ~/.zshrc
+```
+
+Verify nvm installation:
+
+```shell
+command -v nvm
+```
+
+Install and use the project's Node.js version (from .node-version):
+
+```shell
+nvm install 20.19
+nvm use 20.19
+nvm alias default 20.19
 ```
 
 Verify installations:
@@ -54,13 +78,20 @@ npm -v
 git --version
 ```
 
+### Alternative: Homebrew-managed Node (Optional)
+
+```shell
+brew install node
+brew upgrade node
+```
+
 ## 5. Project Setup
 
 Once you have the project folder, navigate to it and install dependencies:
 
 ```shell
 cd sap-aicore-proxy
-npm install
+npm ci
 ```
 
 ## 6. Configure Environment
@@ -73,7 +104,7 @@ You have two options for configuration:
 cp .env.example .env
 ```
 
-### Option A: Automatic configuration (if you have ai-core-key.json from SAP AI Core)
+### Option B: Automatic configuration (if you have ai-core-key.json from SAP AI Core)
 
 ```shell
 ./scripts/generate-env.sh ai-core-key.json
@@ -140,6 +171,7 @@ npm start
 ```
 
 On first startup, the server will:
+
 - **Generate a custom API key** in `sk-proj-*` format
 - **Display the API key** in the console output
 - **Save the API key** to `.env.apikey` file
@@ -208,6 +240,7 @@ Your SAP AI Core Proxy is now ready! For more details, see:
 ### Compatible AI Clients
 
 Popular clients that work with this proxy:
+
 - **[Open WebUI](https://docs.openwebui.com/)** - Web interface with document uploads
 - **[Chatbox](https://chatboxai.app/)** - Cross-platform desktop client
 
@@ -217,4 +250,18 @@ Popular clients that work with this proxy:
 npm install -g npm@latest
 ```
 
-If you need to switch Node versions later, consider using a local tool other than nvm (e.g., Homebrew-managed Node, or a project-specific installer). This guide avoids nvm as requested.
+### Managing Node versions
+
+```shell
+# List installed versions
+nvm ls
+
+# Install another version
+nvm install 20.18.1
+
+# Switch versions
+nvm use 20.18.1
+
+# Set default
+nvm alias default 20.18.1
+```
