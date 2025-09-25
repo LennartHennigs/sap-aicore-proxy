@@ -5,7 +5,7 @@ All notable changes to the SAP AI Core Proxy project will be documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased] - 2025-09-25
+## [1.2.2] - 2025-09-25
 
 ### 🔒 Security & Code Quality Improvements
 
@@ -71,7 +71,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [1.2.2] - 2025-09-24
+## [1.2.3] - 2025-09-24
 
 ### 🚀 Enhanced Process Management & Version Display
 
@@ -285,12 +285,14 @@ This major feature release represents the complete evolution of the SAP AI Core 
 ### Migration Guide
 
 #### Migration Steps
+
 1. Update Environment: Add any new environment variables (all optional)
 2. Get API Key: Start server to auto-generate your custom API key
 3. Update Clients: Configure clients with new API key and endpoint
 4. Test Setup: Verify all models work with your AI clients
 
 #### Compatibility
+
 - API Endpoints: Fully backward compatible with OpenAI format
 - Model Names: Same model identifiers (`gpt-5-nano`, `anthropic--claude-4-sonnet`, `gemini-2.5-flash`)
 - Request/Response: No changes to API request/response formats
@@ -300,6 +302,7 @@ This major feature release represents the complete evolution of the SAP AI Core 
 ## [1.0.1] - 2025-09-23
 
 ### Added
+
 - Comprehensive Authentication Test Suite Implementation (28 Tests)
 - API Key Manager Unit Tests with custom `sk-proj-*` format validation
 - Authentication Middleware Unit Tests with Bearer token validation
@@ -308,14 +311,17 @@ This major feature release represents the complete evolution of the SAP AI Core 
 - Enhanced Test Documentation with complete test coverage documentation
 
 ### Changed
+
 - Three-Tier Test Strategy Implementation for daily CI and release validation
 - Authentication test reliability with focused flow tests
 
 ### Fixed
+
 - Integration Test Reliability Issues with new focused flow tests
 - Authentication Security Validation with complete security feature coverage
 
 ### Security
+
 - Authentication Security Validation with custom API key format validation
 - Access Control Verification with protected endpoints requiring valid authentication
 - End-to-End Security Flow with two-layer authentication system
@@ -325,6 +331,7 @@ This major feature release represents the complete evolution of the SAP AI Core 
 ## [1.0.0] - 2025-09-22
 
 ### Added
+
 - Initial OpenAI-compatible proxy server implementation
 - Multi-model support (GPT-5 nano, Claude 4 Sonnet, Gemini 2.5 Flash)
 - OAuth authentication with SAP AI Core
@@ -334,6 +341,7 @@ This major feature release represents the complete evolution of the SAP AI Core 
 - Deployment scripts for model management
 
 ### Features
+
 - GPT-5 nano via SAP AI Core provider
 - Claude 4 Sonnet via direct API (Anthropic bedrock format)
 - Gemini 2.5 Flash via direct API (Google AI Studio format)
