@@ -5,11 +5,23 @@
 
 export class SecureLogger {
   private static readonly isDevelopment = process.env.NODE_ENV === 'development';
+  private static isStartupPhase = true;
+
+  /**
+   * Mark the end of startup phase to resume normal logging
+   */
+  static endStartupPhase(): void {
+    this.isStartupPhase = false;
+  }
 
   /**
    * Log successful authentication without exposing tokens
    */
   static logAuthSuccess(context?: string): void {
+    // Only silence during startup phase
+    if (this.isStartupPhase) {
+      return;
+    }
     const message = context ? `✅ Authentication successful for ${context}` : '✅ Authentication successful';
     console.log(message);
   }
@@ -26,6 +38,10 @@ export class SecureLogger {
    * Log model operations without exposing deployment IDs
    */
   static logModelConfigured(modelName: string): void {
+    // Only silence during startup phase
+    if (this.isStartupPhase) {
+      return;
+    }
     console.log(`✅ Model ${modelName} configured successfully`);
   }
 
@@ -69,6 +85,10 @@ export class SecureLogger {
    * Log model pool operations without exposing sensitive data
    */
   static logModelPoolOperation(operation: string, modelName?: string): void {
+    // Only silence during startup phase
+    if (this.isStartupPhase) {
+      return;
+    }
     const message = modelName 
       ? `🔧 MODEL POOL: ${operation} for model ${modelName}`
       : `🔧 MODEL POOL: ${operation}`;
@@ -177,6 +197,10 @@ export class SecureLogger {
    * Log security events
    */
   static logSecurityEvent(event: string, details?: string): void {
+    // Only silence during startup phase
+    if (this.isStartupPhase) {
+      return;
+    }
     const message = details 
       ? `🔒 SECURITY: ${event} - ${details}`
       : `🔒 SECURITY: ${event}`;

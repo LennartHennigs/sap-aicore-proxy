@@ -187,14 +187,14 @@ class DeploymentDiscoveryService {
     const invalid: string[] = [];
     const errors: string[] = [];
 
-    console.log('🔎 Discovering deployment IDs for configured models...');
+    // Silent deployment discovery for clean startup
 
     for (const modelName of modelNames) {
       try {
         const deploymentId = await this.getDeploymentId(modelName);
         if (deploymentId) {
           valid.push(modelName);
-          console.log(`✅ ${modelName} -> ${deploymentId}`);
+          // Silent success
         } else {
           invalid.push(modelName);
           const envVar = this.getEnvVarName(modelName);

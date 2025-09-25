@@ -19,6 +19,7 @@ import {
   sanitizeInput, 
   validateContentLength 
 } from './middleware/validation.js';
+import { startupDetectionService } from './streaming/StartupDetectionService.js';
 
 // Get version from package.json
 const __filename = fileURLToPath(import.meta.url);
@@ -67,7 +68,7 @@ function checkExistingInstance(): boolean {
 function createPidFile(): void {
   try {
     writeFileSync(PID_FILE, process.pid.toString(), 'utf8');
-    console.log(`🔒 PID file created: ${PID_FILE} (PID: ${process.pid})`);
+    // Silent PID file creation
   } catch (error) {
     console.error('❌ Failed to create PID file:', error);
     process.exit(1);
@@ -92,7 +93,7 @@ if (checkExistingInstance()) {
   process.exit(1);
 }
 
-// Create PID file for this instance
+// Create PID file for this instance (silent)
 createPidFile();
 
 const app = express();
@@ -177,10 +178,9 @@ const aiLimiter = rateLimit({
   }
 });
 
-// Initialize API key system early
+// Initialize API key system early (completely silent)
 try {
   ApiKeyManager.initialize();
-  console.log('🔐 API key system initialized');
 } catch (error) {
   console.error('❌ Failed to initialize API key system:', error);
   process.exit(1);
@@ -1087,29 +1087,34 @@ app.post('/v1/models/:model\\:generateContent', async (req, res) => {
 
 // Start server
 const server = app.listen(config.server.port, config.server.host, async () => {
-  console.log(`🚀 v${VERSION}`);
+  console.log(`SAP AI Core Proxy – v${VERSION}`);
+  console.log(`🔒 API key loaded - using existing API`);
   
-  // Validate all model configurations on startup
+  // Validate all model configurations and get streaming info
+  let modelCount = 0;
+  let streamingCount = 0;
+  let validationSuccess = true;
+  
   try {
     const validation = await modelRouter.validateAllModels();
     if (!validation.isValid) {
-      console.error('❌ Model configuration validation failed:');
-      validation.errors.forEach(error => console.error(`   • ${error}`));
-      console.error('⚠️ Server will continue but some models may not work correctly');
-    } else {
-      console.log('✅ All model configurations validated successfully');
+      validationSuccess = false;
     }
+    
+    // Get model count
+    const allModels = modelRouter.getAllModels();
+    modelCount = allModels.length;
+    
+    // Run streaming detection silently
+    const streamingResults = await startupDetectionService.runStartupDetection();
+    streamingCount = streamingResults.filter(r => r.detected.sapAiCore || r.detected.directApi).length;
+    
   } catch (error) {
-    console.error('❌ Failed to validate model configurations:', error);
-    console.error('⚠️ Server will continue but models may not work correctly');
-
+    validationSuccess = false;
   }
   
-  console.log(`📡 Configure your AI client with:`);
-  console.log(`   • API Host: \x1b[1m\x1b[37mhttp://${config.server.host}:${config.server.port}\x1b[0m`);
-  console.log(`   • API Path: \x1b[1m\x1b[37m/v1\x1b[0m`);
-  console.log(`   • API Key:  \x1b[1m\x1b[37m${ApiKeyManager.getApiKey()}\x1b[0m`);
-  console.log(`   • Models:   \x1b[1m\x1b[37m${modelRouter.getAllModels().join(', ')}\x1b[0m`);
+  console.log(`🔎 Discovered ${modelCount} models`);
+  console.log(`🌊 ${streamingCount}/${modelCount} models support streaming`);
   
   // Preload provider-supported models for better performance
   const providerModels = modelRouter.getProviderSupportedModels();
@@ -1117,6 +1122,16 @@ const server = app.listen(config.server.port, config.server.host, async () => {
     console.log(`🔄 Preloading provider models: ${providerModels.join(', ')}`);
     modelPool.preloadModels(providerModels);
   }
+  
+  console.log(`✅ Success - Server running on port ${config.server.port}`);
+  
+  console.log(`\n📡 How to configure:`);
+  console.log(`   • API Host: http://${config.server.host}:${config.server.port}`);
+  console.log(`   • API Path: /v1`);
+  console.log(`   • API Key: ${ApiKeyManager.getApiKey()}`);
+  
+  // End startup phase to resume normal logging
+  SecureLogger.endStartupPhase();
 });
 
 // Graceful shutdown

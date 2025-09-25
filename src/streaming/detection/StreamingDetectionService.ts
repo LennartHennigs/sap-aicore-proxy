@@ -38,7 +38,8 @@ export class StreamingDetectionService {
   async detectStreamingCapability(
     modelName: string, 
     deploymentId: string,
-    directApiConfig?: DirectApiConfig
+    directApiConfig?: DirectApiConfig,
+    modelConfig?: any
   ): Promise<StreamingCapability> {
     // Check cache first
     const cached = this.getCachedCapability(modelName);
@@ -56,8 +57,15 @@ export class StreamingDetectionService {
     };
 
     try {
-      // Test SAP AI Core streaming
-      capability.sapAiCore = await this.testSapAiCoreStreaming(deploymentId);
+      // Test SAP AI Core streaming based on model type
+      if (modelConfig?.apiType === 'provider') {
+        // For provider models (like gpt-5-nano), check if they support streaming
+        capability.sapAiCore = modelConfig?.supportsStreaming === true;
+        SecureLogger.logDebug(`Provider model ${modelName}: streaming=${capability.sapAiCore} (from config)`);
+      } else {
+        // For direct API models, test the actual endpoint
+        capability.sapAiCore = await this.testSapAiCoreStreaming(deploymentId);
+      }
       
       // Test direct API streaming if config provided
       if (directApiConfig) {
@@ -288,13 +296,13 @@ export class StreamingDetectionService {
   getCapabilitySummary(): Record<string, { sapAiCore: boolean; directApi: boolean; lastChecked: string }> {
     const summary: Record<string, { sapAiCore: boolean; directApi: boolean; lastChecked: string }> = {};
     
-    for (const [modelName, capability] of this.capabilityCache) {
+    this.capabilityCache.forEach((capability, modelName) => {
       summary[modelName] = {
         sapAiCore: capability.sapAiCore,
         directApi: capability.directApi,
         lastChecked: capability.lastChecked.toISOString()
       };
-    }
+    });
     
     return summary;
   }
