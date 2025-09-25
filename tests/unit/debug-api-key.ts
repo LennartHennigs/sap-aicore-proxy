@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { ApiKeyManager } from './auth/api-key-manager.js';
+import { ApiKeyManager } from '../../src/auth/api-key-manager.js';
 
 console.log('🔍 API Key Debug Information');
 console.log('=' .repeat(50));

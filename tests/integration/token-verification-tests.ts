@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
-import { tokenManager } from './auth/token-manager.js';
-import { config } from './config/app-config.js';
-import { SecureLogger } from './utils/secure-logger.js';
+import { tokenManager } from '../../src/auth/token-manager.js';
+import { config } from '../../src/config/app-config.js';
+import { SecureLogger } from '../../src/utils/secure-logger.js';
 
 /**
  * Token Verification Test Suite
@@ -244,6 +244,6 @@ async function main() {
 }
 
 // Run the test if this file is executed directly
-if (process.argv[1] && process.argv[1].endsWith('test-token-verification.ts')) {
+if (process.argv[1] && process.argv[1].endsWith('token-verification-tests.ts')) {
   main().catch(console.error);
 }

@@ -34,7 +34,7 @@ File: `tests/unit/auth-middleware-tests.ts`
 - **Invalid Key Rejection**: Proper 401 responses for bad keys
 - **Missing Key Rejection**: Authentication failures without keys
 - **Health Endpoint Bypass**: `/health` accessible without authentication
-- **Production vs Development**: Different authentication modes
+- **Consistent Authentication**: Uniform authentication across all environments
 - **Response Headers**: Authentication-related headers
 - **Security Logging**: Proper logging without token exposure
 

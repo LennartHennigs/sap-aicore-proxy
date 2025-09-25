@@ -6,7 +6,7 @@
  */
 
 import { Request, Response, NextFunction } from 'express';
-import { authenticateApiKey, authenticateApiKeyDev, addApiKeyHeaders } from '../../src/middleware/auth.js';
+import { authenticateApiKey, addApiKeyHeaders } from '../../src/middleware/auth.js';
 import { ApiKeyManager } from '../../src/auth/api-key-manager.js';
 import { TestUtils, type TestResult } from '../utils/test-helpers.js';
 
@@ -16,7 +16,6 @@ export interface AuthMiddlewareTestResults {
   invalidKeyRejection: TestResult;
   missingKeyRejection: TestResult;
   healthEndpointBypass: TestResult;
-  productionVsDevMode: TestResult;
   responseHeaders: TestResult;
   securityLogging: TestResult;
   overallSuccess: boolean;
@@ -34,7 +33,6 @@ export class AuthMiddlewareTests {
       invalidKeyRejection: { success: false },
       missingKeyRejection: { success: false },
       healthEndpointBypass: { success: false },
-      productionVsDevMode: { success: false },
       responseHeaders: { success: false },
       securityLogging: { success: false },
       overallSuccess: false
@@ -66,10 +64,6 @@ export class AuthMiddlewareTests {
       results.healthEndpointBypass = await this.testHealthEndpointBypass();
       TestUtils.logTestResult('Health Endpoint Bypass', results.healthEndpointBypass);
 
-      // Test 6: Production vs Development mode
-      console.log('\n🔧 Testing production vs development mode...');
-      results.productionVsDevMode = await this.testProductionVsDevMode();
-      TestUtils.logTestResult('Production vs Development Mode', results.productionVsDevMode);
 
       // Test 7: Response headers
       console.log('\n📋 Testing response headers...');
@@ -88,7 +82,6 @@ export class AuthMiddlewareTests {
         results.invalidKeyRejection,
         results.missingKeyRejection,
         results.healthEndpointBypass,
-        results.productionVsDevMode,
         results.responseHeaders,
         results.securityLogging
       ];
@@ -456,98 +449,6 @@ export class AuthMiddlewareTests {
     }
   }
 
-  private async testProductionVsDevMode(): Promise<TestResult> {
-    try {
-      const originalEnv = process.env.NODE_ENV;
-      const validKey = ApiKeyManager.getApiKey();
-      const devKey = 'any-string-works';
-      
-      const results: any = {};
-
-      // Test 1: Development mode with legacy key
-      process.env.NODE_ENV = 'development';
-
-      let middlewareCalled = false;
-      const mockReq = {
-        path: '/v1/chat/completions',
-        ip: '127.0.0.1',
-        get: (header: string) => header === 'Authorization' ? `Bearer ${devKey}` : undefined
-      } as Request;
-
-      let statusCode = 200;
-      const mockRes = {
-        status: (code: number) => {
-          statusCode = code;
-          return mockRes;
-        },
-        json: (data: any) => mockRes
-      } as Response;
-
-      const mockNext = () => {
-        middlewareCalled = true;
-      };
-
-      authenticateApiKeyDev(mockReq, mockRes, mockNext);
-
-      results.devModeWithLegacyKey = {
-        middlewareCalled,
-        statusCode,
-        accepted: middlewareCalled && statusCode === 200
-      };
-
-      // Test 2: Production mode with legacy key (should fail)
-      process.env.NODE_ENV = 'production';
-      middlewareCalled = false;
-      statusCode = 200;
-
-      const mockReqProd = {
-        path: '/v1/chat/completions',
-        ip: '127.0.0.1',
-        get: (header: string) => header === 'Authorization' ? `Bearer ${devKey}` : undefined
-      } as Request;
-
-      const mockResProd = {
-        status: (code: number) => {
-          statusCode = code;
-          return mockResProd;
-        },
-        json: (data: any) => mockResProd
-      } as Response;
-
-      const mockNextProd = () => {
-        middlewareCalled = true;
-      };
-
-      authenticateApiKeyDev(mockReqProd, mockResProd, mockNextProd);
-
-      results.prodModeWithLegacyKey = {
-        middlewareCalled,
-        statusCode,
-        rejected: !middlewareCalled && statusCode === 401
-      };
-
-      // Restore original environment
-      process.env.NODE_ENV = originalEnv;
-
-      const devModeWorked = results.devModeWithLegacyKey.accepted;
-      const prodModeRejected = results.prodModeWithLegacyKey.rejected;
-
-      return {
-        success: devModeWorked, // Focus on dev mode acceptance since prod rejection depends on implementation
-        data: {
-          devModeWithLegacyKey: results.devModeWithLegacyKey,
-          prodModeWithLegacyKey: results.prodModeWithLegacyKey,
-          environmentRestored: process.env.NODE_ENV === originalEnv
-        }
-      };
-
-    } catch (error) {
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : String(error)
-      };
-    }
-  }
 
   private async testResponseHeaders(): Promise<TestResult> {
     try {
@@ -696,7 +597,6 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       console.log(`   Invalid Key Rejection: ${results.invalidKeyRejection.success ? '✅' : '❌'}`);
       console.log(`   Missing Key Rejection: ${results.missingKeyRejection.success ? '✅' : '❌'}`);
       console.log(`   Health Endpoint Bypass: ${results.healthEndpointBypass.success ? '✅' : '❌'}`);
-      console.log(`   Production vs Dev Mode: ${results.productionVsDevMode.success ? '✅' : '❌'}`);
       console.log(`   Response Headers: ${results.responseHeaders.success ? '✅' : '❌'}`);
       console.log(`   Security Logging: ${results.securityLogging.success ? '✅' : '❌'}`);
       console.log(`\n🎯 Overall: ${results.overallSuccess ? 'PASSED' : 'FAILED'}`);
