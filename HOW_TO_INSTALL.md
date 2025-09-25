@@ -210,7 +210,23 @@ Or check the health endpoint (no authentication required):
 curl http://localhost:3001/health
 ```
 
-## 10. Run Tests (Optional)
+## 10. Create Desktop Shortcut (Optional)
+
+```shell
+- [CMD + Space] > Automator
+- New Application
+```
+
+```shell
+tell application "Terminal"
+	activate
+	do script "cd ~/Documents/sap-aicore-proxy && npm start"
+end tell
+```
+
+![Automator](images/automator.png)
+
+## 11. Run Tests (Optional)
 
 Verify your installation with the authentication test suite:
 
