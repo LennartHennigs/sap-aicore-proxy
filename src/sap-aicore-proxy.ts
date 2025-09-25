@@ -12,7 +12,7 @@ import { openaiHandler } from './handlers/openai-handler.js';
 import { modelPool } from './handlers/model-pool.js';
 import { SecureLogger } from './utils/secure-logger.js';
 import { ApiKeyManager } from './auth/api-key-manager.js';
-import { authenticateApiKey, authenticateApiKeyDev, addApiKeyHeaders } from './middleware/auth.js';
+import { authenticateApiKey, addApiKeyHeaders } from './middleware/auth.js';
 import { 
   validateChatCompletion, 
   handleValidationErrors, 
@@ -187,7 +187,7 @@ try {
 }
 
 // Apply authentication (before rate limiting but after CORS)
-app.use(authenticateApiKeyDev);
+app.use(authenticateApiKey);
 app.use(addApiKeyHeaders);
 
 // Apply rate limiting

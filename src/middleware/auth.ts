@@ -68,58 +68,6 @@ export const authenticateApiKey = (req: Request, res: Response, next: NextFuncti
   next();
 };
 
-/**
- * Optional: More permissive authentication for development/testing
- * This middleware can be used during development but should not be used in production
- */
-export const authenticateApiKeyDev = (req: Request, res: Response, next: NextFunction) => {
-  // Skip authentication for health endpoint
-  if (req.path === '/health') {
-    return next();
-  }
-
-  const authHeader = req.get('Authorization');
-  const providedKey = extractBearerToken(authHeader);
-
-  // In development mode, also accept the legacy "any-string-works" for backward compatibility
-  if (!providedKey) {
-    SecureLogger.logSecurityEvent('Dev auth failed', `Missing API key from ${req.ip}`);
-    
-    return res.status(401).json({
-      error: {
-        message: 'Authentication required. Please provide a valid API key in the Authorization header.',
-        type: 'authentication_error',
-        code: 'missing_api_key'
-      }
-    });
-  }
-
-  // Check against real API key first
-  const isValidRealKey = ApiKeyManager.validateApiKey(providedKey);
-  
-  // In development, also accept legacy format for backward compatibility
-  const isValidDevKey = process.env.NODE_ENV !== 'production' && providedKey === 'any-string-works';
-  
-  if (!isValidRealKey && !isValidDevKey) {
-    SecureLogger.logSecurityEvent('Dev auth failed', `Invalid API key from ${req.ip}`);
-    
-    return res.status(401).json({
-      error: {
-        message: 'Invalid API key provided. Please check your authorization credentials.',
-        type: 'authentication_error',
-        code: 'invalid_api_key'
-      }
-    });
-  }
-
-  if (isValidDevKey) {
-    SecureLogger.logSecurityEvent('Dev auth used', `Legacy dev key used from ${req.ip} - consider upgrading`);
-  } else {
-    SecureLogger.logSecurityEvent('Authentication successful', `Valid API key from ${req.ip}`);
-  }
-  
-  next();
-};
 
 /**
  * Middleware to add API key information to response headers (for debugging)

@@ -217,7 +217,7 @@ export const MODEL_CAPABILITIES = {
 // Test configuration
 export const TEST_CONFIG = {
   PROXY_URL: 'http://localhost:3001',
-  API_KEY: 'any-string-works',
+  API_KEY: process.env.TEST_API_KEY || 'sk-test-key-for-testing',
   TIMEOUT: 30000, // 30 seconds
   MAX_RETRIES: 3,
   RETRY_DELAY: 1000, // 1 second

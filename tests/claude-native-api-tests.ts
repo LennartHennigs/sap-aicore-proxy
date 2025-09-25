@@ -22,8 +22,8 @@ class ClaudeNativeApiTests {
   private invalidClient: ProxyHttpClient;
 
   constructor() {
-    // Test with development key (should work)
-    this.devClient = new ProxyHttpClient(TEST_CONFIG.PROXY_URL, 'any-string-works');
+    // Test with proper API key
+    this.devClient = new ProxyHttpClient(TEST_CONFIG.PROXY_URL, TEST_CONFIG.API_KEY);
     
     // Test with proper API key (should work)
     this.client = new ProxyHttpClient(TEST_CONFIG.PROXY_URL, 'sk-proj-HK56Fkjt0nvZ5lMhla1G0MHF0nQO6RJdrkMLA8w1XrQ');
