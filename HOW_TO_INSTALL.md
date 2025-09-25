@@ -2,6 +2,7 @@
 
 You need to install `node`, `npm`, `git`.
 And I suggest to use `iTerm`, a nice Terminal program.
+
 to start, open your Terminal `[CMD + Space] > Terminal`
 
 ## 1. Install Homebrew
