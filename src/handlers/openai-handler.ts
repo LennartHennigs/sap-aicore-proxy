@@ -2,6 +2,8 @@ import { run } from '@openai/agents';
 import { modelRouter } from '../models/model-router.js';
 import { modelPool } from './model-pool.js';
 import { config } from '../config/app-config.js';
+import { responseValidator } from '../utils/response-validator.js';
+import { SecureLogger } from '../utils/secure-logger.js';
 
 export interface OpenAIResponse {
   success: boolean;
@@ -61,26 +63,52 @@ export class OpenAIHandler {
       const text = result.text;
       const chunkSize = 10; // Characters per chunk
       
+      // Extract prompt for logging
+      const prompt = this.extractPromptForLogging(messages);
+      
       for (let i = 0; i < text.length; i += chunkSize) {
-        const chunk = text.slice(i, i + chunkSize);
-        yield {
-          delta: chunk,
+        const chunkText = text.slice(i, i + chunkSize);
+        const rawChunk = {
+          delta: chunkText,
           finished: false
         };
+        
+        // Validate and correct the chunk before yielding
+        const validation = responseValidator.validateStreamChunk(rawChunk, modelName, prompt);
+        const chunkToYield = validation.corrected ? validation.correctedChunk! : rawChunk;
+        
+        if (validation.corrected) {
+          SecureLogger.logDebug(`Stream chunk corrected for ${modelName}: ${validation.issues.join(', ')}`);
+        }
+        
+        yield chunkToYield;
         
         // Add small delay to simulate streaming
         await new Promise(resolve => setTimeout(resolve, 50));
       }
       
       // Send final chunk with usage info
-      yield {
+      const finalChunk = {
         delta: '',
         usage: result.usage,
         finished: true
       };
       
+      // Validate final chunk
+      const finalValidation = responseValidator.validateStreamChunk(finalChunk, modelName, prompt);
+      yield finalValidation.corrected ? finalValidation.correctedChunk! : finalChunk;
+      
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const prompt = this.extractPromptForLogging(messages);
+      
+      // Log the streaming API error with sanitized context
+      SecureLogger.logError(
+        'Provider API streaming call failed',
+        error,
+        `model: ${modelName}, prompt: "${prompt.substring(0, 100)}..."`
+      );
+      
       throw new Error(`Provider API streaming error: ${errorMessage}`);
     }
   }
@@ -94,6 +122,11 @@ export class OpenAIHandler {
     try {
       // Get pooled agent instance (reuses existing instances per model)
       const agent = await modelPool.getModel(modelName);
+      
+      // Extract prompt for logging and validation
+      const prompt = this.extractPromptForLogging(messages);
+      
+      let response: OpenAIResponse;
       
       // For vision models, use the proper message format
       if (modelConfig.supportsVision && this.hasImageContent(messages)) {
@@ -115,7 +148,7 @@ export class OpenAIHandler {
             throw new Error('AI SDK vision processing failed - model cannot access image data');
           }
           
-          return {
+          response = {
             success: true,
             text: result.finalOutput || 'No response',
             usage: {
@@ -132,10 +165,10 @@ export class OpenAIHandler {
           }
           
           // For other errors, fall back to text-only
-          const prompt = this.extractPrompt(messages);
-          const result = await run(agent, prompt);
+          const textPrompt = this.extractPrompt(messages);
+          const result = await run(agent, textPrompt);
           
-          return {
+          response = {
             success: true,
             text: result.finalOutput || 'No response',
             usage: {
@@ -147,10 +180,10 @@ export class OpenAIHandler {
         }
       } else {
         // For text-only models, use simple prompt
-        const prompt = this.extractPrompt(messages);
-        const result = await run(agent, prompt);
+        const textPrompt = this.extractPrompt(messages);
+        const result = await run(agent, textPrompt);
         
-        return {
+        response = {
           success: true,
           text: result.finalOutput || 'No response',
           usage: {
@@ -160,9 +193,41 @@ export class OpenAIHandler {
           }
         };
       }
+
+      // CRITICAL FIX: Validate and correct the response to prevent "Invalid API Response" errors
+      // This was the missing piece causing Cline errors
+      try {
+        const validation = responseValidator.validateAndCorrectResponse(response, modelName, prompt);
+        
+        if (validation.corrected) {
+          SecureLogger.logDebug(`OpenAI handler response corrected for ${modelName}: ${validation.issues.join(', ')}`);
+          return validation.correctedResponse!;
+        }
+        
+        if (!validation.isValid) {
+          SecureLogger.logError(`OpenAI handler response validation failed for ${modelName}`, new Error(validation.issues.join(', ')));
+          // Return corrected response even if validation flagged issues
+          return validation.correctedResponse || response;
+        }
+        
+        return response;
+      } catch (validationError) {
+        // If response validation completely fails, log the error but return the original response
+        SecureLogger.logError(`OpenAI handler response validator threw error for ${modelName} (non-critical)`, validationError);
+        return response;
+      }
       
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const prompt = this.extractPromptForLogging(messages);
+      
+      // Log the provider API error with sanitized context
+      SecureLogger.logError(
+        'Provider API call failed',
+        error,
+        `model: ${modelName}, prompt: "${prompt.substring(0, 100)}..."`
+      );
+      
       throw new Error(`Provider API error: ${errorMessage}`);
     }
   }
@@ -183,6 +248,31 @@ export class OpenAIHandler {
     } else {
       return JSON.stringify(lastMessage.content);
     }
+  }
+
+  /**
+   * Extract prompt from messages for logging (similar to direct API handler)
+   */
+  private extractPromptForLogging(messages: any[]): string {
+    // Find the last user message
+    const lastUserMessage = messages.slice().reverse().find(msg => msg.role === 'user');
+    if (lastUserMessage?.content) {
+      if (typeof lastUserMessage.content === 'string') {
+        return lastUserMessage.content.length > 500 
+          ? lastUserMessage.content.substring(0, 500) + '...[truncated]'
+          : lastUserMessage.content;
+      } else if (Array.isArray(lastUserMessage.content)) {
+        // Extract text from array content (may include images)
+        const textParts = lastUserMessage.content
+          .filter(item => item.type === 'text' || typeof item === 'string')
+          .map(item => typeof item === 'string' ? item : item.text)
+          .join(' ');
+        return textParts.length > 500 
+          ? textParts.substring(0, 500) + '...[truncated]'
+          : textParts;
+      }
+    }
+    return 'No user message found';
   }
 
   private hasImageContent(messages: any[]): boolean {

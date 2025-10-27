@@ -4,8 +4,14 @@
  */
 
 export class SecureLogger {
-  private static readonly isDevelopment = process.env.NODE_ENV === 'development';
   private static isStartupPhase = true;
+
+  /**
+   * Check if we're in development mode (dynamic check for testing)
+   */
+  private static get isDevelopment(): boolean {
+    return process.env.NODE_ENV === 'development';
+  }
 
   /**
    * Mark the end of startup phase to resume normal logging
@@ -114,7 +120,7 @@ export class SecureLogger {
     if (!error) return 'Unknown error';
     
     if (error instanceof Error) {
-      // In development, show more details
+      // In development, preserve original error message
       if (this.isDevelopment) {
         return error.message;
       }
@@ -191,6 +197,54 @@ export class SecureLogger {
    */
   static logRateLimitHit(ip: string, endpoint: string): void {
     console.log(`⚠️ RATE LIMIT: Rate limit exceeded from ${ip} on ${endpoint}`);
+  }
+
+  /**
+   * Log SAP AI Core rate limit events
+   */
+  static logRateLimitStart(modelName: string, retryAfterSeconds?: number): void {
+    const retryInfo = retryAfterSeconds ? ` (retry after ${retryAfterSeconds}s)` : '';
+    console.log(`⚠️ RATE LIMIT: SAP AI Core rate limiting started for model '${modelName}'${retryInfo}`);
+  }
+
+  static logRateLimitRetry(modelName: string, retryCount: number, maxRetries: number, delaySeconds: number): void {
+    console.log(`🔄 RATE LIMIT: Retrying model '${modelName}' (attempt ${retryCount}/${maxRetries}) in ${delaySeconds}s`);
+  }
+
+  static logRateLimitMaxRetriesExceeded(modelName: string): void {
+    console.log(`❌ RATE LIMIT: Max retries exceeded for model '${modelName}' - requests will be rejected until rate limit clears`);
+  }
+
+  static logRateLimitRecovery(modelName: string, durationMs?: number): void {
+    const duration = durationMs ? ` (duration: ${this.formatDuration(durationMs)})` : '';
+    console.log(`✅ RATE LIMIT: SAP AI Core rate limiting ended for model '${modelName}'${duration}`);
+  }
+
+  static logRateLimitRecoveryFailed(modelName: string): void {
+    console.log(`⚠️ RATE LIMIT: Recovery attempt failed for model '${modelName}' - still rate limited`);
+  }
+
+  static logRateLimitReset(modelName: string): void {
+    console.log(`🔄 RATE LIMIT: Rate limit state reset for model '${modelName}'`);
+  }
+
+  /**
+   * Format duration in milliseconds to human-readable format
+   */
+  private static formatDuration(ms: number): string {
+    const seconds = Math.floor(ms / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+
+    if (hours > 0) {
+      const remainingMinutes = minutes % 60;
+      return `${hours}h ${remainingMinutes}m`;
+    } else if (minutes > 0) {
+      const remainingSeconds = seconds % 60;
+      return `${minutes}m ${remainingSeconds}s`;
+    } else {
+      return `${seconds}s`;
+    }
   }
 
   /**

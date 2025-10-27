@@ -19,7 +19,7 @@ interface AppConfig {
     defaultTokenExpiry: number; // seconds
   };
   cors: {
-    origin: string;
+    origin: string | string[];
     methods: string[];
     allowedHeaders: string[];
   };
@@ -46,6 +46,20 @@ interface AppConfig {
       generic: {
         endpoint: string;
       };
+    };
+  };
+  rateLimit: {
+    maxRetries: number;
+    baseDelayMs: number;
+    maxDelayMs: number;
+    exponentialBase: number;
+    jitterFactor: number;
+  };
+  logging: {
+    responseAnalysis: {
+      enabled: boolean;
+      logAllResponses: boolean;
+      logFile: string;
     };
   };
 }
@@ -107,6 +121,20 @@ export const config: AppConfig = {
       generic: {
         endpoint: process.env.GENERIC_DEFAULT_ENDPOINT || ''
       }
+    }
+  },
+  rateLimit: {
+    maxRetries: parseInt(process.env.RATE_LIMIT_MAX_RETRIES || '3', 10),
+    baseDelayMs: parseInt(process.env.RATE_LIMIT_BASE_DELAY_MS || '1000', 10),
+    maxDelayMs: parseInt(process.env.RATE_LIMIT_MAX_DELAY_MS || '30000', 10),
+    exponentialBase: parseFloat(process.env.RATE_LIMIT_EXPONENTIAL_BASE || '2'),
+    jitterFactor: parseFloat(process.env.RATE_LIMIT_JITTER_FACTOR || '0.1')
+  },
+  logging: {
+    responseAnalysis: {
+      enabled: process.env.RESPONSE_ANALYSIS_LOGGING === 'true',
+      logAllResponses: process.env.LOG_ALL_RESPONSES === 'true',
+      logFile: process.env.RESPONSE_LOG_FILE || './logs/response-analysis.jsonl'
     }
   }
 };

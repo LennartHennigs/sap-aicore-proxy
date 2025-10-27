@@ -1,6 +1,6 @@
 {
   "name": "sap-aicore-proxy",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "private": true,
   "type": "module",
   "description": "A high-performance, enterprise-grade proxy server that provides OpenAI-compatible API access to SAP AI Core's AI models (GPT-5 nano, Claude 4 Sonnet, Gemini 2.5 Flash).",
@@ -31,7 +31,9 @@
     "test:auth:integration": "node --import=tsx --env-file=.env ./tests/integration/authentication-integration-tests.ts",
     "test:api-key-manager": "node --import=tsx --env-file=.env ./tests/unit/api-key-manager-tests.ts",
     "test:auth-middleware": "node --import=tsx --env-file=.env ./tests/unit/auth-middleware-tests.ts",
-    "test:auth:flow": "node --import=tsx --env-file=.env ./tests/integration/auth-flow-tests.ts"
+    "test:auth:flow": "node --import=tsx --env-file=.env ./tests/integration/auth-flow-tests.ts",
+    "test:sap-rate-limit": "node --import=tsx --env-file=.env ./tests/run-rate-limit-tests.ts",
+    "test:sap-rate-limit:unit": "node --import=tsx --env-file=.env ./tests/unit/sap-aicore-rate-limit-tests.ts"
   },
   "repository": {
     "type": "git",

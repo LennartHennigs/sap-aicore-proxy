@@ -20,6 +20,125 @@ import {
   validateContentLength 
 } from './middleware/validation.js';
 import { startupDetectionService } from './streaming/StartupDetectionService.js';
+import { rateLimitManager } from './utils/rate-limit-manager.js';
+import { responseValidator } from './utils/response-validator.js';
+
+/**
+ * Proxy-level response validation safety net
+ * This ensures ALL responses are validated as a final fallback
+ */
+function validateProxyResponse(response: any, modelName: string, endpoint: string): any {
+  try {
+    // Only validate text responses that could be invalid
+    if (response && typeof response === 'object' && response.choices && Array.isArray(response.choices)) {
+      const choice = response.choices[0];
+      if (choice && choice.message && typeof choice.message.content === 'string') {
+        // This is an OpenAI-style response - validate the content
+        const mockDirectApiResponse = {
+          success: true,
+          text: choice.message.content,
+          usage: response.usage || { promptTokens: 0, completionTokens: 0, totalTokens: 0 }
+        };
+        
+        const validation = responseValidator.validateAndCorrectResponse(mockDirectApiResponse, modelName);
+        
+        if (validation.corrected && validation.correctedResponse) {
+          SecureLogger.logDebug(`Proxy-level response correction applied for ${modelName} on ${endpoint}: ${validation.issues.join(', ')}`);
+          
+          // Return corrected response in original format
+          return {
+            ...response,
+            choices: [{
+              ...choice,
+              message: {
+                ...choice.message,
+                content: validation.correctedResponse.text
+              }
+            }],
+            usage: validation.correctedResponse.usage
+          };
+        }
+      }
+    }
+    
+    // For Claude-style responses
+    if (response && typeof response === 'object' && response.content && Array.isArray(response.content)) {
+      const textContent = response.content.find((c: any) => c.type === 'text');
+      if (textContent && typeof textContent.text === 'string') {
+        const mockDirectApiResponse = {
+          success: true,
+          text: textContent.text,
+          usage: response.usage || { promptTokens: 0, completionTokens: 0, totalTokens: 0 }
+        };
+        
+        const validation = responseValidator.validateAndCorrectResponse(mockDirectApiResponse, modelName);
+        
+        if (validation.corrected && validation.correctedResponse) {
+          SecureLogger.logDebug(`Proxy-level response correction applied for ${modelName} on ${endpoint}: ${validation.issues.join(', ')}`);
+          
+          return {
+            ...response,
+            content: [{
+              ...textContent,
+              text: validation.correctedResponse.text
+            }],
+            usage: validation.correctedResponse.usage
+          };
+        }
+      }
+    }
+    
+    // For Gemini-style responses
+    if (response && typeof response === 'object' && response.candidates && Array.isArray(response.candidates)) {
+      const candidate = response.candidates[0];
+      if (candidate && candidate.content && candidate.content.parts && Array.isArray(candidate.content.parts)) {
+        const textPart = candidate.content.parts.find((p: any) => p.text);
+        if (textPart && typeof textPart.text === 'string') {
+          const mockDirectApiResponse = {
+            success: true,
+            text: textPart.text,
+            usage: { 
+              promptTokens: response.usageMetadata?.promptTokenCount || 0,
+              completionTokens: response.usageMetadata?.candidatesTokenCount || 0,
+              totalTokens: response.usageMetadata?.totalTokenCount || 0
+            }
+          };
+          
+          const validation = responseValidator.validateAndCorrectResponse(mockDirectApiResponse, modelName);
+          
+          if (validation.corrected && validation.correctedResponse) {
+            SecureLogger.logDebug(`Proxy-level response correction applied for ${modelName} on ${endpoint}: ${validation.issues.join(', ')}`);
+            
+            return {
+              ...response,
+              candidates: [{
+                ...candidate,
+                content: {
+                  ...candidate.content,
+                  parts: [{
+                    ...textPart,
+                    text: validation.correctedResponse.text
+                  }]
+                }
+              }],
+              usageMetadata: {
+                promptTokenCount: validation.correctedResponse.usage.promptTokens,
+                candidatesTokenCount: validation.correctedResponse.usage.completionTokens,
+                totalTokenCount: validation.correctedResponse.usage.totalTokens
+              }
+            };
+          }
+        }
+      }
+    }
+    
+    return response;
+  } catch (error) {
+    // Never let proxy-level validation break responses
+    SecureLogger.logError(`Proxy-level validation failed for ${modelName} on ${endpoint} (non-critical)`, error);
+    return response;
+  }
+}
 
 // Get version from package.json
 const __filename = fileURLToPath(import.meta.url);
@@ -598,7 +717,7 @@ app.post('/v1/chat/completions',
     }
 
     // Format non-streaming response in OpenAI-compatible format
-    const response = {
+    let response = {
       id: responseId,
       object: 'chat.completion',
       created: responseCreated,
@@ -617,6 +736,9 @@ app.post('/v1/chat/completions',
         total_tokens: result.usage?.totalTokens || 0
       }
     };
+
+    // Apply proxy-level validation as final safety net
+    response = validateProxyResponse(response, model, '/v1/chat/completions');
 
     res.json(response);
 
@@ -645,6 +767,10 @@ app.get('/health', (req, res) => {
     modelPool: {
       stats: modelPool.getPoolStats(),
       poolSize: Object.keys(modelPool.getPoolStats()).length
+    },
+    rateLimit: {
+      config: rateLimitManager.getConfig(),
+      modelStatus: rateLimitManager.getRateLimitStatus()
     }
   });
 });
@@ -839,7 +965,7 @@ app.post('/v1/messages', async (req, res) => {
     }
 
     // Format response in Claude-compatible format
-    const response = {
+    let response = {
       id: responseId,
       type: 'message',
       role: 'assistant',
@@ -857,6 +983,9 @@ app.post('/v1/messages', async (req, res) => {
         output_tokens: result.usage?.completionTokens || 0
       }
     };
+
+    // Apply proxy-level validation as final safety net
+    response = validateProxyResponse(response, model, '/v1/messages');
 
     res.json(response);
 

@@ -5,6 +5,112 @@ All notable changes to the SAP AI Core Proxy project will be documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.3] - 2025-10-27
+
+### 🚀 Major Features & Critical Bug Fixes
+
+### Added
+
+#### 📊 Comprehensive LLM Response Logging
+
+- **Complete Request Tracking**: Added unique correlation IDs for every request with raw response capture and final response tracking
+- **Advanced Malformation Detection**: Implemented detection and auto-correction for empty/invalid text, whitespace-only responses, malformed JSON, reasoning-only responses, and invalid characters
+- **Pattern Analysis System**: Added suspicious pattern detection for error keywords, debugging info, JSON fragments, HTML/XML tags, and raw data patterns
+- **Performance Monitoring**: Integrated processing time metrics, response size tracking, and transformation count monitoring
+- **Structured Logging**: Implemented JSON Lines format logging to `./logs/response-analysis.jsonl` with complete diagnostic information
+
+#### 🛡️ SAP AI Core Rate Limiting Solution
+
+- **Intelligent Rate Limit Management**: Added `RateLimitManager` with per-model state tracking (NORMAL, RATE_LIMITED, RECOVERING)
+- **Exponential Backoff with Jitter**: Implemented configurable retry logic with exponential delays and random jitter to prevent thundering herd problems
+- **Automatic Recovery Detection**: Added smart recovery detection that automatically clears rate limit status when requests succeed
+- **Enhanced Health Endpoint**: Extended `/health` endpoint with comprehensive rate limit status information for all models
+- **Configurable Retry Behavior**: Added full configuration via environment variables for max retries, delays, and backoff multipliers
+
+#### 🔧 Comprehensive Response Validation
+
+- **Missing OpenAI Handler Validation**: Added comprehensive response validation to `callProviderAPI` method (ROOT CAUSE FIX)
+- **Proxy-Level Safety Net**: Implemented final fallback validation at proxy level for all endpoints
+- **Multi-Format Support**: Added validation for OpenAI, Claude, and Gemini response formats
+- **Graceful Error Handling**: Ensures validation never breaks API calls with graceful degradation
+
+### Fixed
+
+#### 🐛 Critical Bug Fixes
+
+- **ENOTFOUND Error Resolution**: Fixed critical issue where response analysis logging caused `ENOTFOUND` errors during conversations
+  - Root cause: Synchronous file system operations in logging mechanism
+  - Solution: Converted to asynchronous non-blocking logging with comprehensive error handling
+  - Impact: Eliminated intermittent conversation failures and improved response times
+- **Invalid API Response Errors**: Resolved persistent "The provider returned an empty or unparsable response" errors in Cline
+  - Added missing response validation in OpenAI handler (primary code path)
+  - Implemented proxy-level validation safety net
+  - Enhanced validation for all response types and error scenarios
+- **SAP AI Core Rate Limit Handling**: Fixed 429 "TooManyRequest" errors with intelligent retry mechanisms
+
+### Changed
+
+#### 🔧 System Improvements
+
+- **Non-blocking Logging Architecture**: Converted all response analysis logging to asynchronous operations using `setImmediate()`
+- **Enhanced Error Isolation**: Logging failures no longer propagate to API calls with multiple layers of error handling
+- **Improved Rate Limit User Experience**: Transparent retries with clear error messages and status visibility
+- **Startup Configuration Display**: Added clear logging configuration status display during server startup
+
+### Security
+
+#### 🛡️ Reliability & Monitoring
+
+- **Safe Logging Operations**: Comprehensive error handling ensures logging failures never break API functionality
+- **Rate Limit Protection**: Intelligent handling of SAP AI Core rate limits prevents service disruption
+- **Response Validation Security**: All response paths now protected with validation to prevent malformed data
+
+### Performance
+
+#### ⚡ Performance Enhancements
+
+- **Async Logging Performance**: Improved response times by removing blocking file I/O operations from API call path
+- **Intelligent Rate Limit Retries**: Reduced user impact from rate limiting with smart retry logic and exponential backoff
+- **Memory-Efficient Response Processing**: Optimized response validation with minimal memory footprint
+
+### Configuration
+
+#### ⚙️ New Environment Variables
+
+**Response Analysis Logging:**
+```bash
+RESPONSE_ANALYSIS_LOGGING=true     # Enable comprehensive logging
+LOG_ALL_RESPONSES=true             # Log all responses vs. problematic only
+RESPONSE_LOG_FILE=./logs/response-analysis.jsonl  # Log file location
+```
+
+**Rate Limiting Configuration:**
+```bash
+RATE_LIMIT_MAX_RETRIES=3           # Maximum retry attempts
+RATE_LIMIT_BASE_DELAY_MS=1000      # Base delay between retries
+RATE_LIMIT_MAX_DELAY_MS=30000      # Maximum delay cap
+RATE_LIMIT_EXPONENTIAL_BASE=2      # Exponential backoff multiplier
+RATE_LIMIT_JITTER_FACTOR=0.1       # Jitter factor (0-1)
+```
+
+### Technical Details
+
+#### Implementation Highlights
+
+- **Response Logging**: Complete diagnostic trail with before/after transformations, correlation IDs, and pattern analysis
+- **Rate Limiting**: State-based management with exponential backoff, jitter, and automatic recovery
+- **Response Validation**: Multi-layer validation with handler-level and proxy-level safety nets
+- **Error Handling**: Comprehensive non-blocking error handling across all components
+
+#### Monitoring & Observability
+
+- **Health Endpoint**: Enhanced with rate limit status and configuration display
+- **Structured Logging**: JSON Lines format for easy parsing and analysis
+- **Performance Metrics**: Processing time, retry counts, and success rate tracking
+- **Status Visibility**: Clear startup configuration display and runtime status updates
+
+---
+
 ## [1.2.2] - 2025-09-25
 
 ### 🔒 Security & Code Quality Improvements

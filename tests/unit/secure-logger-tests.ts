@@ -369,6 +369,9 @@ class SecureLoggerTests {
   async runAllTests(): Promise<void> {
     console.log('\n🔒 Running SecureLogger Tests...\n');
 
+    // Ensure startup phase is ended for proper testing
+    SecureLogger.endStartupPhase();
+
     const tests = [
       { name: 'Error sanitization (production)', test: () => this.testErrorSanitizationProduction() },
       { name: 'Error sanitization (development)', test: () => this.testErrorSanitizationDevelopment() },

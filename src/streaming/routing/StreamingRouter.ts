@@ -4,6 +4,7 @@ import { geminiDirectHandler, GeminiDirectHandler } from '../direct-apis/GeminiD
 import { openaiHandler, type StreamChunk } from '../../handlers/openai-handler.js';
 import { directApiHandler } from '../../handlers/direct-api-handler.js';
 import { modelRouter, type ModelConfig } from '../../models/model-router.js';
+import { responseValidator } from '../../utils/response-validator.js';
 import { SecureLogger } from '../../utils/secure-logger.js';
 
 export interface StreamingRoute {
@@ -191,12 +192,26 @@ export class StreamingRouter {
    * Stream via direct API true streaming
    */
   private async *streamViaDirectApiTrue(modelName: string, messages: any[]): AsyncIterable<StreamChunk> {
+    let streamGenerator: AsyncIterable<any>;
+    
     if (modelName.includes('claude') || modelName.includes('anthropic')) {
-      yield* anthropicDirectHandler.streamResponse(messages);
+      streamGenerator = anthropicDirectHandler.streamResponse(messages);
     } else if (modelName.includes('gemini') || modelName.includes('google')) {
-      yield* geminiDirectHandler.streamResponse(messages);
+      streamGenerator = geminiDirectHandler.streamResponse(messages);
     } else {
       throw new Error(`No direct API handler available for model: ${modelName}`);
+    }
+
+    // Validate and correct each streaming chunk
+    for await (const chunk of streamGenerator) {
+      const validation = responseValidator.validateStreamChunk(chunk, modelName);
+      
+      if (validation.corrected) {
+        SecureLogger.logDebug(`Direct API stream chunk corrected for ${modelName}: ${validation.issues.join(', ')}`);
+        yield validation.correctedChunk!;
+      } else {
+        yield chunk;
+      }
     }
   }
 
@@ -216,18 +231,28 @@ export class StreamingRouter {
     const chunkSize = 8; // Characters per chunk
     
     for (let i = 0; i < text.length; i += chunkSize) {
-      const chunk = text.slice(i, i + chunkSize);
-      yield {
-        delta: chunk,
+      const chunkText = text.slice(i, i + chunkSize);
+      const rawChunk = {
+        delta: chunkText,
         finished: false
       };
+      
+      // Validate and correct the chunk
+      const validation = responseValidator.validateStreamChunk(rawChunk, modelName);
+      const chunkToYield = validation.corrected ? validation.correctedChunk! : rawChunk;
+      
+      if (validation.corrected) {
+        SecureLogger.logDebug(`SAP AI Core mock stream chunk corrected for ${modelName}: ${validation.issues.join(', ')}`);
+      }
+      
+      yield chunkToYield;
       
       // Add small delay to simulate streaming
       await new Promise(resolve => setTimeout(resolve, 30));
     }
     
     // Send final chunk with usage info
-    yield {
+    const finalChunk = {
       delta: '',
       usage: {
         promptTokens: 0, // SAP AI Core doesn't provide detailed usage
@@ -236,6 +261,10 @@ export class StreamingRouter {
       },
       finished: true
     };
+    
+    // Validate final chunk
+    const finalValidation = responseValidator.validateStreamChunk(finalChunk, modelName);
+    yield finalValidation.corrected ? finalValidation.correctedChunk! : finalChunk;
   }
 
   /**

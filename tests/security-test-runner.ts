@@ -10,6 +10,7 @@ import { ValidationMiddlewareTests } from './unit/validation-middleware-tests.js
 import { RateLimitingTests } from './unit/rate-limiting-tests.js';
 import { SecurityHeadersTests } from './unit/security-headers-tests.js';
 import { SecurityIntegrationTests } from './integration/security-integration-tests.js';
+import { SapAiCoreRateLimitTests } from './unit/sap-aicore-rate-limit-tests.js';
 
 class SecurityTestRunner {
   async runAllSecurityTests(): Promise<void> {
@@ -34,6 +35,9 @@ class SecurityTestRunner {
       const headersTests = new SecurityHeadersTests();
       await headersTests.runAllTests();
       
+      const sapAiCoreRateLimitTests = new SapAiCoreRateLimitTests();
+      await sapAiCoreRateLimitTests.runAllTests();
+      
       // Integration Tests
       console.log('🔗 Running Integration Tests...\n');
       
@@ -51,6 +55,7 @@ class SecurityTestRunner {
       console.log('   ✅ Secure logging with information disclosure prevention');
       console.log('   ✅ Input validation and sanitization middleware');
       console.log('   ✅ Rate limiting and DoS protection');
+      console.log('   ✅ SAP AI Core rate limit handling with intelligent retry');
       console.log('   ✅ Security headers (CSP, HSTS, X-Frame-Options, etc.)');
       console.log('   ✅ Cross-layer security integration');
       console.log('   ✅ Malicious input handling');
