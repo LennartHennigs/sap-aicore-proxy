@@ -10,14 +10,16 @@
     },
     "anthropic--claude-4-sonnet": {
       "provider": "anthropic",
-      "supportsStreaming": false,
+      "supportsStreaming": true,
       "supportsVision": true,
       "apiType": "direct",
       "endpoint": "/invoke",
       "requestFormat": "anthropic_bedrock",
       "anthropic_version": "bedrock-2023-05-31",
       "max_tokens": 1000,
-      "description": "Anthropic Claude 4 Sonnet via direct SAP AI Core API"
+      "description": "Anthropic Claude 4 Sonnet via direct SAP AI Core API",
+      "streamingSupported": true,
+      "directApiStreaming": true
     },
     "gemini-2.5-flash": {
       "provider": "google",

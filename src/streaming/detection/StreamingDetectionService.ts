@@ -62,14 +62,26 @@ export class StreamingDetectionService {
         // For provider models (like gpt-5-nano), check if they support streaming
         capability.sapAiCore = modelConfig?.supportsStreaming === true;
         SecureLogger.logDebug(`Provider model ${modelName}: streaming=${capability.sapAiCore} (from config)`);
+      } else if (modelConfig?.apiType === 'direct' && modelConfig?.supportsStreaming === true) {
+        // For direct API models with streaming configured, assume SAP AI Core supports it
+        // This avoids false negatives when deployment endpoints aren't accessible during startup
+        capability.sapAiCore = true;
+        SecureLogger.logDebug(`Direct model ${modelName}: streaming=true (from config, skipping live test)`);
       } else {
-        // For direct API models, test the actual endpoint
+        // For other direct API models, test the actual endpoint
         capability.sapAiCore = await this.testSapAiCoreStreaming(deploymentId);
       }
       
       // Test direct API streaming if config provided
       if (directApiConfig) {
-        capability.directApi = await this.testDirectApiStreaming(directApiConfig);
+        // For models configured with streaming support, assume direct API works too if API key is available
+        const apiKeyAvailable = !!process.env[directApiConfig.requiresApiKey];
+        if (modelConfig?.supportsStreaming === true && apiKeyAvailable) {
+          capability.directApi = true;
+          SecureLogger.logDebug(`Direct API ${modelName}: streaming=true (config + API key available)`);
+        } else {
+          capability.directApi = await this.testDirectApiStreaming(directApiConfig);
+        }
       }
 
       // Cache the result

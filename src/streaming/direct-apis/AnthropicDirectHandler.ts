@@ -59,15 +59,17 @@ export class AnthropicDirectHandler {
 
       const decoder = new TextDecoder();
       let buffer = '';
+      let totalUsage: any = null;
 
       try {
         while (true) {
           const { done, value } = await reader.read();
           
           if (done) {
-            // Send final chunk
+            // Send final chunk with usage if available
             yield {
               delta: '',
+              usage: totalUsage,
               finished: true
             };
             break;
@@ -86,6 +88,7 @@ export class AnthropicDirectHandler {
               if (data === '[DONE]') {
                 yield {
                   delta: '',
+                  usage: totalUsage,
                   finished: true
                 };
                 return;
@@ -94,24 +97,39 @@ export class AnthropicDirectHandler {
               try {
                 const parsed = JSON.parse(data);
                 
-                if (parsed.type === 'content_block_delta') {
-                  const delta = parsed.delta?.text || '';
-                  if (delta) {
-                    yield {
-                      delta,
-                      finished: false
-                    };
+                // Handle different event types according to Claude API docs
+                if (parsed.type === 'message_start') {
+                  // Initial message event - can extract initial usage info
+                  if (parsed.message?.usage) {
+                    totalUsage = this.extractUsage(parsed.message);
+                  }
+                } else if (parsed.type === 'content_block_delta') {
+                  // Content delta events
+                  if (parsed.delta?.type === 'text_delta') {
+                    const delta = parsed.delta?.text || '';
+                    if (delta) {
+                      yield {
+                        delta,
+                        finished: false
+                      };
+                    }
+                  }
+                } else if (parsed.type === 'message_delta') {
+                  // Message delta with final usage info
+                  if (parsed.usage) {
+                    totalUsage = this.extractUsage(parsed);
                   }
                 } else if (parsed.type === 'message_stop') {
+                  // Final message stop event
                   yield {
                     delta: '',
-                    usage: this.extractUsage(parsed),
+                    usage: totalUsage,
                     finished: true
                   };
                   return;
                 }
               } catch (parseError) {
-                SecureLogger.logDebug(`Failed to parse Anthropic streaming data: ${parseError}`);
+                SecureLogger.logDebug(`Failed to parse streaming data: ${data}`);
                 continue;
               }
             }
@@ -120,18 +138,16 @@ export class AnthropicDirectHandler {
       } finally {
         reader.releaseLock();
       }
-
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      SecureLogger.logError('Anthropic direct API streaming', error);
-      throw new Error(`Anthropic direct API streaming failed: ${errorMessage}`);
+      SecureLogger.logError('Anthropic streaming error', error);
+      throw error;
     }
   }
 
   /**
-   * Non-streaming response from Anthropic's direct API
+   * Get a non-streaming response from Anthropic's direct API
    */
-  async callDirectApi(messages: any[]): Promise<DirectApiResponse> {
+  async getResponse(messages: any[]): Promise<DirectApiResponse> {
     const apiKey = process.env.ANTHROPIC_API_KEY;
     if (!apiKey) {
       throw new Error('ANTHROPIC_API_KEY environment variable is required for direct API access');
@@ -145,7 +161,8 @@ export class AnthropicDirectHandler {
         headers: {
           'Authorization': `Bearer ${apiKey}`,
           'Content-Type': 'application/json',
-          'anthropic-version': this.apiVersion
+          'anthropic-version': this.apiVersion,
+          'anthropic-beta': 'messages-2023-12-15'
         },
         body: JSON.stringify(requestBody)
       });
@@ -155,129 +172,119 @@ export class AnthropicDirectHandler {
         throw new Error(`Anthropic API error: ${response.status} - ${errorText}`);
       }
 
-      const result = await response.json();
+      const data = await response.json();
       
+      // Convert Claude response to our standard format
+      const text = data.content?.[0]?.text || '';
+      const usage = this.extractUsage(data);
+
       return {
         success: true,
-        text: result.content?.[0]?.text || 'No response',
-        usage: {
-          promptTokens: result.usage?.input_tokens || 0,
-          completionTokens: result.usage?.output_tokens || 0,
-          totalTokens: (result.usage?.input_tokens || 0) + (result.usage?.output_tokens || 0)
-        }
+        text,
+        usage
       };
-
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      SecureLogger.logError('Anthropic direct API', error);
-      throw new Error(`Anthropic direct API failed: ${errorMessage}`);
+      SecureLogger.logError('Anthropic direct API error', error);
+      return {
+        success: false,
+        text: '',
+        usage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 }
+      };
     }
   }
 
   /**
-   * Build Anthropic-compatible request body
+   * Build request body for Anthropic API
    */
-  private buildAnthropicRequest(messages: any[], stream: boolean): any {
-    // Separate system and non-system messages
-    const systemMessages = messages.filter((msg: any) => msg.role === 'system');
-    const nonSystemMessages = messages.filter((msg: any) => msg.role !== 'system');
-    
-    const requestBody: any = {
-      model: 'claude-3-sonnet-20240229',
-      max_tokens: 1000,
-      stream,
-      messages: nonSystemMessages.map((msg: any) => ({
+  private buildAnthropicRequest(messages: any[], stream: boolean = false): any {
+    // Convert messages to Claude format
+    const claudeMessages = messages
+      .filter(msg => msg.role !== 'system')
+      .map(msg => ({
         role: msg.role,
-        content: this.formatContent(msg.content)
-      }))
+        content: typeof msg.content === 'string' ? msg.content : this.formatContent(msg.content)
+      }));
+
+    // Extract system message if present
+    const systemMessage = messages.find(msg => msg.role === 'system');
+
+    const request: any = {
+      model: 'claude-3-sonnet-20240229', // Default model, can be overridden
+      max_tokens: 4096,
+      messages: claudeMessages,
+      stream
     };
 
-    // Add system message if present
-    if (systemMessages.length > 0) {
-      requestBody.system = typeof systemMessages[0].content === 'string' 
-        ? systemMessages[0].content 
-        : this.formatContent(systemMessages[0].content);
+    if (systemMessage?.content) {
+      request.system = systemMessage.content;
     }
 
-    return requestBody;
+    return request;
   }
 
   /**
-   * Format content for Anthropic API
+   * Format mixed content for Claude API
    */
-  private formatContent(content: any): any {
-    if (typeof content === 'string') {
+  private formatContent(content: any[]): any {
+    if (!Array.isArray(content)) {
       return content;
     }
-    
-    if (Array.isArray(content)) {
-      return content.map((item: any) => {
-        if (typeof item === 'string') {
-          return { type: 'text', text: item };
-        }
-        
-        if (item.type === 'text') {
-          return { type: 'text', text: item.text };
-        }
-        
-        if (item.type === 'image_url') {
-          // Convert OpenAI image_url format to Anthropic format
-          const imageUrl = item.image_url?.url || item.image_url;
-          
-          if (typeof imageUrl === 'string' && imageUrl.startsWith('data:image/')) {
-            const match = imageUrl.match(/^data:image\/([^;]+);base64,(.+)$/);
-            if (match) {
-              const [, mediaType, base64Data] = match;
-              
-              return {
-                type: 'image',
-                source: {
-                  type: 'base64',
-                  media_type: `image/${mediaType}`,
-                  data: base64Data
-                }
-              };
-            }
+
+    return content.map(item => {
+      if (item.type === 'text') {
+        return { type: 'text', text: item.text };
+      } else if (item.type === 'image_url') {
+        return {
+          type: 'image',
+          source: {
+            type: 'base64',
+            media_type: this.extractMediaType(item.image_url.url),
+            data: this.extractBase64Data(item.image_url.url)
           }
-          
-          return { type: 'text', text: '[Image content - format not supported]' };
-        }
-        
-        return { type: 'text', text: JSON.stringify(item) };
-      });
-    }
-    
-    return JSON.stringify(content);
+        };
+      }
+      return item;
+    });
   }
 
   /**
-   * Extract usage information from response
+   * Extract media type from data URL
+   */
+  private extractMediaType(dataUrl: string): string {
+    const match = dataUrl.match(/data:([^;]+);/);
+    return match ? match[1] : 'image/jpeg';
+  }
+
+  /**
+   * Extract base64 data from data URL
+   */
+  private extractBase64Data(dataUrl: string): string {
+    const match = dataUrl.match(/base64,(.+)/);
+    return match ? match[1] : '';
+  }
+
+  /**
+   * Extract usage information from Claude response
    */
   private extractUsage(data: any): { promptTokens: number; completionTokens: number; totalTokens: number } {
     const usage = data.usage || {};
-    const promptTokens = usage.input_tokens || 0;
-    const completionTokens = usage.output_tokens || 0;
+    const inputTokens = usage.input_tokens || 0;
+    const outputTokens = usage.output_tokens || 0;
     
     return {
-      promptTokens,
-      completionTokens,
-      totalTokens: promptTokens + completionTokens
+      promptTokens: inputTokens,
+      completionTokens: outputTokens,
+      totalTokens: inputTokens + outputTokens
     };
   }
 
   /**
-   * Check if direct API is available
+   * Check if Anthropic direct API is available
    */
   static isAvailable(): boolean {
     return !!process.env.ANTHROPIC_API_KEY;
   }
-
-  /**
-   * Get required environment variables
-   */
-  static getRequiredEnvVars(): string[] {
-    return ['ANTHROPIC_API_KEY'];
-  }
 }
 
+// Export singleton instance
 export const anthropicDirectHandler = new AnthropicDirectHandler();
