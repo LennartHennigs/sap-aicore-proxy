@@ -3,8 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import { readFileSync, writeFileSync, unlinkSync, existsSync } from 'fs';
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
+import { join } from 'path';
 import { config } from './config/app-config.js';
 import { modelRouter } from './models/model-router.js';
 import { directApiHandler } from './handlers/direct-api-handler.js';
@@ -22,13 +21,22 @@ import {
 import { startupDetectionService } from './streaming/StartupDetectionService.js';
 import { rateLimitManager } from './utils/rate-limit-manager.js';
 import { responseValidator } from './utils/response-validator.js';
+import { versionChecker } from './utils/version-checker.js';
+import { consolePrompter } from './utils/console-prompter.js';
+import { updateHandler } from './utils/update-handler.js';
 
 /**
  * Proxy-level response validation safety net
  * This ensures ALL responses are validated as a final fallback
  */
-function validateProxyResponse(response: any, modelName: string, endpoint: string): any {
+function validateProxyResponse(response: any, modelName: string, endpoint: string, prompt?: string): any {
   try {
+    // Handle completely null/undefined responses
+    if (!response) {
+      SecureLogger.logDebug(`Proxy-level validation: null response for ${modelName} on ${endpoint} - cannot validate`);
+      return response;
+    }
+    
     // Only validate text responses that could be invalid
     if (response && typeof response === 'object' && response.choices && Array.isArray(response.choices)) {
       const choice = response.choices[0];
@@ -40,7 +48,7 @@ function validateProxyResponse(response: any, modelName: string, endpoint: strin
           usage: response.usage || { promptTokens: 0, completionTokens: 0, totalTokens: 0 }
         };
         
-        const validation = responseValidator.validateAndCorrectResponse(mockDirectApiResponse, modelName);
+        const validation = responseValidator.validateAndCorrectResponse(mockDirectApiResponse, modelName, prompt);
         
         if (validation.corrected && validation.correctedResponse) {
           SecureLogger.logDebug(`Proxy-level response correction applied for ${modelName} on ${endpoint}: ${validation.issues.join(', ')}`);
@@ -71,7 +79,7 @@ function validateProxyResponse(response: any, modelName: string, endpoint: strin
           usage: response.usage || { promptTokens: 0, completionTokens: 0, totalTokens: 0 }
         };
         
-        const validation = responseValidator.validateAndCorrectResponse(mockDirectApiResponse, modelName);
+        const validation = responseValidator.validateAndCorrectResponse(mockDirectApiResponse, modelName, prompt);
         
         if (validation.corrected && validation.correctedResponse) {
           SecureLogger.logDebug(`Proxy-level response correction applied for ${modelName} on ${endpoint}: ${validation.issues.join(', ')}`);
@@ -104,7 +112,7 @@ function validateProxyResponse(response: any, modelName: string, endpoint: strin
             }
           };
           
-          const validation = responseValidator.validateAndCorrectResponse(mockDirectApiResponse, modelName);
+          const validation = responseValidator.validateAndCorrectResponse(mockDirectApiResponse, modelName, prompt);
           
           if (validation.corrected && validation.correctedResponse) {
             SecureLogger.logDebug(`Proxy-level response correction applied for ${modelName} on ${endpoint}: ${validation.issues.join(', ')}`);
@@ -141,13 +149,11 @@ function validateProxyResponse(response: any, modelName: string, endpoint: strin
 }
 
 // Get version from package.json
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-const packageJson = JSON.parse(readFileSync(join(__dirname, '../package.json'), 'utf8'));
+const packageJson = JSON.parse(readFileSync(join(process.cwd(), 'package.json'), 'utf8'));
 const VERSION = packageJson.version;
 
 // PID file management
-const PID_FILE = join(__dirname, '../sap-aicore-proxy.pid');
+const PID_FILE = join(process.cwd(), 'sap-aicore-proxy.pid');
 
 function checkExistingInstance(): boolean {
   if (!existsSync(PID_FILE)) {
@@ -737,8 +743,14 @@ app.post('/v1/chat/completions',
       }
     };
 
+    // Extract prompt for logging
+    const prompt = messages.find((msg: any) => msg.role === 'user')?.content || 'No user message found';
+    const promptText = typeof prompt === 'string' ? prompt : 
+      Array.isArray(prompt) ? prompt.map((p: any) => p.type === 'text' ? p.text : '[content]').join(' ') : 
+      'Complex message content';
+
     // Apply proxy-level validation as final safety net
-    response = validateProxyResponse(response, model, '/v1/chat/completions');
+    response = validateProxyResponse(response, model, '/v1/chat/completions', promptText);
 
     res.json(response);
 
@@ -754,25 +766,72 @@ app.post('/v1/chat/completions',
 });
 
 // Health check endpoint
-app.get('/health', (req, res) => {
-  res.json({
-    status: 'OK',
-    version: VERSION,
-    timestamp: new Date().toISOString(),
-    models: {
-      available: modelRouter.getAllModels(),
-      providerSupported: modelRouter.getProviderSupportedModels(),
-      directApi: modelRouter.getDirectApiModels()
-    },
-    modelPool: {
-      stats: modelPool.getPoolStats(),
-      poolSize: Object.keys(modelPool.getPoolStats()).length
-    },
-    rateLimit: {
-      config: rateLimitManager.getConfig(),
-      modelStatus: rateLimitManager.getRateLimitStatus()
+app.get('/health', async (req, res) => {
+  try {
+    // Get cached version info (don't fetch new data for health checks)
+    const versionInfo = versionChecker.getCachedVersionInfo();
+    
+    const healthResponse: any = {
+      status: 'OK',
+      version: VERSION,
+      timestamp: new Date().toISOString(),
+      models: {
+        available: modelRouter.getAllModels(),
+        providerSupported: modelRouter.getProviderSupportedModels(),
+        directApi: modelRouter.getDirectApiModels()
+      },
+      modelPool: {
+        stats: modelPool.getPoolStats(),
+        poolSize: Object.keys(modelPool.getPoolStats()).length
+      },
+      rateLimit: {
+        config: rateLimitManager.getConfig(),
+        modelStatus: rateLimitManager.getRateLimitStatus()
+      }
+    };
+
+    // Add version check information if available
+    if (versionInfo) {
+      healthResponse.versionCheck = {
+        current: versionInfo.current,
+        latest: versionInfo.latest,
+        updateAvailable: versionInfo.updateAvailable,
+        lastChecked: versionInfo.lastChecked,
+        releaseUrl: versionInfo.updateAvailable ? versionInfo.releaseUrl : undefined
+      };
+    } else {
+      healthResponse.versionCheck = {
+        current: VERSION,
+        status: 'Version check not yet performed'
+      };
     }
-  });
+
+    res.json(healthResponse);
+  } catch (error) {
+    // Don't let version check errors break health endpoint
+    res.json({
+      status: 'OK',
+      version: VERSION,
+      timestamp: new Date().toISOString(),
+      models: {
+        available: modelRouter.getAllModels(),
+        providerSupported: modelRouter.getProviderSupportedModels(),
+        directApi: modelRouter.getDirectApiModels()
+      },
+      modelPool: {
+        stats: modelPool.getPoolStats(),
+        poolSize: Object.keys(modelPool.getPoolStats()).length
+      },
+      rateLimit: {
+        config: rateLimitManager.getConfig(),
+        modelStatus: rateLimitManager.getRateLimitStatus()
+      },
+      versionCheck: {
+        current: VERSION,
+        status: 'Version check error'
+      }
+    });
+  }
 });
 
 // Models endpoint for discovery
@@ -794,6 +853,102 @@ app.get('/v1/models', (req, res) => {
     object: 'list',
     data: models
   });
+});
+
+// Dedicated version endpoint
+app.get('/version', async (req, res) => {
+  try {
+    const forceRefresh = req.query.refresh === 'true';
+    
+    let versionInfo;
+    if (forceRefresh) {
+      versionInfo = await versionChecker.forceRefresh();
+    } else {
+      versionInfo = await versionChecker.checkForUpdates();
+    }
+    
+    const canUpdate = updateHandler.canUpdate();
+    
+    res.json({
+      current: versionInfo.current,
+      latest: versionInfo.latest,
+      updateAvailable: versionInfo.updateAvailable,
+      lastChecked: versionInfo.lastChecked,
+      releaseInfo: versionInfo.updateAvailable ? {
+        version: versionInfo.latest,
+        url: versionInfo.releaseUrl,
+        notes: versionInfo.releaseNotes
+      } : undefined,
+      updateCapability: {
+        canUpdate: canUpdate.possible,
+        reason: canUpdate.reason
+      },
+      config: {
+        checkEnabled: process.env.VERSION_CHECK_ENABLED !== 'false',
+        cacheHours: parseInt(process.env.VERSION_CHECK_CACHE_HOURS || '24', 10),
+        includePreReleases: process.env.VERSION_CHECK_INCLUDE_PRERELEASES === 'true'
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      error: 'Failed to check version information',
+      current: VERSION,
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+// Manual update trigger endpoint (requires API key)
+app.post('/admin/update', async (req, res) => {
+  try {
+    // Check if updates are enabled
+    if (process.env.VERSION_CHECK_ENABLED === 'false') {
+      return res.status(403).json({
+        error: 'Version checking and updates are disabled'
+      });
+    }
+    
+    // Check if system can update
+    const canUpdate = updateHandler.canUpdate();
+    if (!canUpdate.possible) {
+      return res.status(400).json({
+        error: 'System cannot perform updates',
+        reason: canUpdate.reason
+      });
+    }
+    
+    // Get latest version info
+    const versionInfo = await versionChecker.checkForUpdates();
+    
+    if (!versionInfo.updateAvailable) {
+      return res.json({
+        message: 'Already running the latest version',
+        current: versionInfo.current,
+        latest: versionInfo.latest
+      });
+    }
+    
+    // Start update process (this will terminate the process on success)
+    const result = await updateHandler.performUpdate(versionInfo);
+    
+    if (result.success) {
+      // This should not be reached as the process should restart
+      res.json({
+        message: 'Update completed successfully',
+        newVersion: result.newVersion
+      });
+    } else {
+      res.status(500).json({
+        error: 'Update failed',
+        details: result.error
+      });
+    }
+  } catch (error) {
+    res.status(500).json({
+      error: 'Update process failed',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
 });
 
 // Claude native API endpoint - /v1/messages
@@ -984,8 +1139,14 @@ app.post('/v1/messages', async (req, res) => {
       }
     };
 
+    // Extract prompt for logging
+    const prompt = messages.find((msg: any) => msg.role === 'user')?.content || system || 'No user message found';
+    const promptText = typeof prompt === 'string' ? prompt : 
+      Array.isArray(prompt) ? prompt.map((p: any) => p.type === 'text' ? p.text : '[content]').join(' ') : 
+      'Complex message content';
+
     // Apply proxy-level validation as final safety net
-    response = validateProxyResponse(response, model, '/v1/messages');
+    response = validateProxyResponse(response, model, '/v1/messages', promptText);
 
     res.json(response);
 
@@ -1183,7 +1344,7 @@ app.post('/v1/models/:model\\:generateContent', async (req, res) => {
     }
 
     // Format response in Gemini-compatible format
-    const response = {
+    let response = {
       candidates: [{
         content: {
           parts: [{ text: result.text }],
@@ -1199,6 +1360,25 @@ app.post('/v1/models/:model\\:generateContent', async (req, res) => {
         totalTokenCount: result.usage?.totalTokens || 0
       }
     };
+
+    // Extract prompt for logging
+    const userContent = contents.find((c: any) => c.role === 'user');
+    const systemContent = systemInstruction?.parts?.map((p: any) => p.text).join(' ') || '';
+    let promptText = 'No user content found';
+    
+    if (userContent?.parts) {
+      promptText = userContent.parts
+        .filter((p: any) => p.text)
+        .map((p: any) => p.text)
+        .join(' ') || '[Image or other content]';
+    }
+    
+    if (systemContent) {
+      promptText = systemContent + ' ' + promptText;
+    }
+
+    // Apply proxy-level validation as final safety net
+    response = validateProxyResponse(response, model, '/v1/models/:model:generateContent', promptText);
 
     res.json(response);
 
@@ -1258,6 +1438,47 @@ const server = app.listen(config.server.port, config.server.host, async () => {
   console.log(`   • API Host: http://${config.server.host}:${config.server.port}`);
   console.log(`   • API Path: /v1`);
   console.log(`   • API Key: ${ApiKeyManager.getApiKey()}`);
+  
+  // Check for updates on startup (if enabled)
+  try {
+    const versionCheckEnabled = process.env.VERSION_CHECK_ENABLED !== 'false';
+    if (versionCheckEnabled) {
+      const versionInfo = await versionChecker.checkForUpdates();
+      
+      if (versionInfo.updateAvailable) {
+        const isInteractive = process.env.VERSION_CHECK_INTERACTIVE === 'true';
+        
+        if (isInteractive) {
+          // Show interactive prompt
+          const shouldUpdate = await consolePrompter.displayStartupUpdatePrompt(versionInfo);
+          
+          if (shouldUpdate) {
+            // Check if system can update
+            const canUpdate = updateHandler.canUpdate();
+            if (canUpdate.possible) {
+              console.log('\n🚀 Starting automatic update...');
+              await updateHandler.performUpdate(versionInfo);
+              // This will restart the process, so code below won't execute
+            } else {
+              console.log(`\n⚠️  Cannot perform automatic update: ${canUpdate.reason}`);
+              console.log('   Please update manually or check system requirements.');
+            }
+          }
+        } else {
+          // Just display notification without prompting
+          consolePrompter.displayStartupUpdateCheck(versionInfo);
+        }
+      } else {
+        // Only show "up to date" message in debug mode
+        if (process.env.NODE_ENV === 'development' || process.env.DEBUG === 'true') {
+          console.log(`\n✅ Running latest version (v${versionInfo.current})`);
+        }
+      }
+    }
+  } catch (error) {
+    // Don't let version check failures break startup
+    SecureLogger.logError('Startup version check failed (non-critical)', error);
+  }
   
   // End startup phase to resume normal logging
   SecureLogger.endStartupPhase();

@@ -346,6 +346,19 @@ export class ResponseValidator {
    * Ensure response has DirectApiResponse structure
    */
   private ensureValidDirectApiResponse(response: any): DirectApiResponse {
+    // Handle null/undefined responses first
+    if (!response) {
+      return {
+        success: false,
+        text: 'No response received from the model',
+        usage: {
+          promptTokens: 0,
+          completionTokens: 0,
+          totalTokens: 0
+        }
+      };
+    }
+
     if (this.isValidDirectApiResponse(response)) {
       return response;
     }

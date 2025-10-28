@@ -1,0 +1,12 @@
+{
+  "versionInfo": {
+    "current": "1.2.3",
+    "latest": "1.2.2",
+    "updateAvailable": false,
+    "releaseUrl": "https://github.com/LennartHennigs/sap-aicore-proxy/releases/tag/v1.2.2",
+    "releaseNotes": "see changelog",
+    "tarballUrl": "https://api.github.com/repos/LennartHennigs/sap-aicore-proxy/tarball/v1.2.2",
+    "lastChecked": "2025-10-27T16:06:46.268Z"
+  },
+  "cacheTimestamp": 1761581206268
+}
