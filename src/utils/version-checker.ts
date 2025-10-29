@@ -65,16 +65,25 @@ export class VersionChecker {
     try {
       // Try to load from cache first
       const cachedInfo = this.loadFromCache();
-      if (cachedInfo && this.isCacheValid(cachedInfo.cacheTimestamp)) {
+      const currentVersion = this.getCurrentVersion();
+      
+      // Cache is valid if:
+      // 1. Cache exists and is time-valid, AND
+      // 2. Current version hasn't changed since cache was created
+      if (cachedInfo && this.isCacheValid(cachedInfo.cacheTimestamp) && 
+          cachedInfo.versionInfo?.current === currentVersion) {
         SecureLogger.logDebug('Using cached version information');
         return cachedInfo.versionInfo!;
+      }
+      
+      // If version changed, log the change
+      if (cachedInfo?.versionInfo?.current && cachedInfo.versionInfo.current !== currentVersion) {
+        SecureLogger.logDebug(`Version changed from ${cachedInfo.versionInfo.current} to ${currentVersion}, invalidating cache`);
       }
 
       // Cache is invalid or doesn't exist, fetch from GitHub
       SecureLogger.logDebug('Fetching latest version information from GitHub');
       const latestRelease = await this.fetchLatestRelease();
-      
-      const currentVersion = this.getCurrentVersion();
       const versionInfo: VersionInfo = {
         current: currentVersion,
         latest: this.cleanVersion(latestRelease.tag_name),
