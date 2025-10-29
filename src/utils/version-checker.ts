@@ -40,14 +40,21 @@ export class VersionChecker {
     this.githubRepo = 'LennartHennigs/sap-aicore-proxy';
     this.includePreReleases = process.env.VERSION_CHECK_INCLUDE_PRERELEASES === 'true';
     
-    // Get current version from package.json
+    // Initialize with default, will be read fresh each time it's needed
+    this.currentVersion = '0.0.0';
+  }
+
+  /**
+   * Get current version from package.json (reads fresh each time)
+   */
+  private getCurrentVersion(): string {
     try {
       const packagePath = join(process.cwd(), 'package.json');
       const packageJson = JSON.parse(readFileSync(packagePath, 'utf8'));
-      this.currentVersion = packageJson.version;
+      return packageJson.version;
     } catch (error) {
       SecureLogger.logError('Failed to read current version from package.json', error);
-      this.currentVersion = '0.0.0';
+      return '0.0.0';
     }
   }
 
@@ -67,10 +74,11 @@ export class VersionChecker {
       SecureLogger.logDebug('Fetching latest version information from GitHub');
       const latestRelease = await this.fetchLatestRelease();
       
+      const currentVersion = this.getCurrentVersion();
       const versionInfo: VersionInfo = {
-        current: this.currentVersion,
+        current: currentVersion,
         latest: this.cleanVersion(latestRelease.tag_name),
-        updateAvailable: this.compareVersions(this.currentVersion, this.cleanVersion(latestRelease.tag_name)),
+        updateAvailable: this.compareVersions(currentVersion, this.cleanVersion(latestRelease.tag_name)),
         releaseUrl: latestRelease.html_url,
         releaseNotes: this.formatReleaseNotes(latestRelease.body),
         tarballUrl: latestRelease.tarball_url,
@@ -92,9 +100,10 @@ export class VersionChecker {
       }
       
       // Return default info
+      const currentVersion = this.getCurrentVersion();
       return {
-        current: this.currentVersion,
-        latest: this.currentVersion,
+        current: currentVersion,
+        latest: currentVersion,
         updateAvailable: false,
         releaseUrl: '',
         releaseNotes: 'Unable to check for updates',
@@ -134,7 +143,7 @@ export class VersionChecker {
     try {
       const response = await fetch(url, {
         headers: {
-          'User-Agent': `sap-aicore-proxy/${this.currentVersion}`,
+          'User-Agent': `sap-aicore-proxy/${this.getCurrentVersion()}`,
           'Accept': 'application/vnd.github.v3+json'
         },
         // 10 second timeout

@@ -5,6 +5,78 @@ All notable changes to the SAP AI Core Proxy project will be documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.5] - 2025-10-29
+
+### 🐛 Critical Bug Fix: Version Check Cache Persistence
+
+This patch release fixes a critical issue where the version check cache would become stale and persist incorrect version information due to a singleton pattern implementation flaw.
+
+### Fixed
+
+#### 🔧 Version Checker Cache Issues
+
+- **Stale Version Cache**: Fixed singleton pattern issue where `currentVersion` was cached at module load time and never updated
+- **Persistent Incorrect Data**: Resolved issue where cache file would persist with outdated version information (e.g., showing 1.2.3 when package.json had 1.2.4)
+- **Cache Invalidation**: Fixed cache invalidation logic to properly handle package.json version updates
+- **Dynamic Version Reading**: Version is now read fresh from package.json each time it's needed instead of being cached in memory
+
+#### 🏗️ Architecture Improvements
+
+- **Singleton Pattern Fix**: Removed problematic version caching from constructor
+- **Fresh Version Reading**: Implemented `getCurrentVersion()` method that reads package.json on each call
+- **Cache Robustness**: Cache now always reflects the current package.json version even if it changes during runtime
+- **Memory Management**: Eliminated memory-cached version data that could become stale
+
+### Technical Details
+
+#### Root Cause
+
+The original implementation had a fatal flaw in the singleton pattern:
+
+```typescript
+// PROBLEMATIC CODE (FIXED)
+constructor() {
+  // This cached version at module load time
+  this.currentVersion = packageJson.version; // ❌ CACHED FOREVER
+}
+
+export const versionChecker = new VersionChecker(); // ❌ SINGLETON CREATED AT MODULE LOAD
+```
+
+**The Problem**: When the singleton was created at module import time, it read package.json once and cached the version forever. If package.json was updated, the singleton still had the old version, which would then be saved to the cache file, making the stale data persistent.
+
+#### Solution
+
+```typescript
+// FIXED CODE
+constructor() {
+  this.currentVersion = '0.0.0'; // ✅ NOT USED ANYMORE
+}
+
+private getCurrentVersion(): string {
+  // ✅ Reads package.json fresh every time
+  const packageJson = JSON.parse(readFileSync(packagePath, 'utf8'));
+  return packageJson.version;
+}
+```
+
+#### Impact
+
+- **Cache Accuracy**: Version check cache now always contains current package.json version
+- **Update Reliability**: Package.json version updates are immediately reflected in cache refreshes
+- **Data Integrity**: Eliminates persistent stale version data in cache files
+- **Future-Proof**: Prevents this issue from recurring if package.json is updated during runtime
+
+### Verification
+
+- ✅ Fresh version checks now read current package.json version
+- ✅ Cache functionality still works (avoids unnecessary API calls)
+- ✅ Force refresh properly updates with current version
+- ✅ Multiple instances all read the correct version
+- ✅ Cache invalidation works correctly when package.json changes
+
+---
+
 ## [1.2.4] - 2025-10-29
 
 ### 🚀 Major Features & Performance Enhancements
