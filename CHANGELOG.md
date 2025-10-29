@@ -5,6 +5,67 @@ All notable changes to the SAP AI Core Proxy project will be documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.7] - 2025-10-29
+
+### 🔧 Interactive Update System Enhancement
+
+This patch release fixes the interactive update prompt system and ensures clean display formatting, resolving issues where update downloads could corrupt local improvements.
+
+### Fixed
+
+#### 🎯 Interactive Update Prompt System
+
+- **Clean Display Format**: Fixed verbose release notes being displayed during update prompts - now shows clean format: `🔔 Update available: v1.2.5 → v1.2.6`
+- **5-Second Timeout**: Restored proper 5-second timeout for interactive update prompts (was reverted to 10 seconds)
+- **Interactive Configuration**: Fixed `VERSION_CHECK_INTERACTIVE=true` environment variable support for startup prompts
+- **Update Process Integrity**: Prevented automatic update downloads from overwriting local code improvements
+
+#### 🛡️ Release Download Protection
+
+- **Local Changes Preservation**: Fixed issue where automatic updates were overwriting committed improvements with older release files
+- **Dependency Management**: Ensured `tsx` dependency is properly maintained across update processes
+- **Git Integration**: Improved update process to respect local git commits and avoid corrupting working directory
+
+#### 🎨 User Experience Improvements
+
+- **Professional Display**: Clean, non-cluttered update notifications without verbose release notes
+- **Timeout Behavior**: Proper 5-second timeout with graceful fallback: `⏰ Update prompt timed out, continuing without update...`
+- **TTY Detection**: Improved terminal detection for interactive vs automated environments
+
+### Technical Details
+
+#### Root Cause Analysis
+
+The issue occurred when the automatic update system downloaded official release files from GitHub, which overwrote local improvements to the console prompter system. This caused:
+
+1. **Verbose release notes** to reappear in update notifications
+2. **10-second timeout** to be restored instead of the improved 5-second timeout
+3. **Interactive prompt configuration** to be lost
+
+#### Solution Implementation
+
+- **Git-based Recovery**: Used `git restore` to recover committed improvements from git history
+- **Environment Configuration**: Properly configured `VERSION_CHECK_INTERACTIVE=true` and `VERSION_CHECK_PROMPT_TIMEOUT=5`
+- **Dependency Consistency**: Ensured all dependencies (especially `tsx`) are properly maintained
+- **Version Bump**: Created v1.2.7 to prevent future corruption of current improvements
+
+#### Verification
+
+- ✅ Interactive prompt displays correctly: `🤔 Would you like to update now? (y/N):`
+- ✅ Clean display format working: `🔔 Update available: v1.2.5 → v1.2.6`
+- ✅ 5-second timeout functioning properly
+- ✅ All dependencies properly installed and working
+- ✅ Server starts and runs without errors
+
+### Benefits
+
+- **Protected Improvements**: Local code improvements now protected from being overwritten by release downloads
+- **Consistent UX**: Clean, professional update experience for all users
+- **Reliable Dependencies**: Proper dependency management prevents startup errors
+- **Future-Proof**: v1.2.7 release ensures these improvements are preserved in official releases
+
+---
+
 ## [1.2.6] - 2025-10-29
 
 ### 🧹 Repository Cleanup & Cache Management
