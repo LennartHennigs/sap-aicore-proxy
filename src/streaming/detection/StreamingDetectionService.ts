@@ -2,6 +2,14 @@ import { tokenManager } from '../../auth/token-manager.js';
 import { config } from '../../config/app-config.js';
 import { SecureLogger } from '../../utils/secure-logger.js';
 
+interface PerformanceMetrics {
+  detectionStartTime: number;
+  detectionEndTime: number;
+  testCount: number;
+  cacheHits: number;
+  cacheMisses: number;
+}
+
 export interface StreamingCapability {
   sapAiCore: boolean;
   directApi: boolean;
@@ -20,8 +28,13 @@ export interface DirectApiConfig {
 export class StreamingDetectionService {
   private static instance: StreamingDetectionService;
   private capabilityCache = new Map<string, StreamingCapability>();
-  private readonly DETECTION_TIMEOUT = 10000; // 10 seconds
-  private readonly CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours
+  private performanceMetrics: PerformanceMetrics = {
+    detectionStartTime: 0,
+    detectionEndTime: 0,
+    testCount: 0,
+    cacheHits: 0,
+    cacheMisses: 0
+  };
 
   private constructor() {}
 
@@ -41,12 +54,17 @@ export class StreamingDetectionService {
     directApiConfig?: DirectApiConfig,
     modelConfig?: any
   ): Promise<StreamingCapability> {
+    const startTime = Date.now();
+    this.performanceMetrics.testCount++;
+
     // Check cache first
     const cached = this.getCachedCapability(modelName);
     if (cached && this.isCacheValid(cached)) {
+      this.performanceMetrics.cacheHits++;
       return cached;
     }
 
+    this.performanceMetrics.cacheMisses++;
     SecureLogger.logDebug(`🔍 Detecting streaming capabilities for model: ${modelName}`);
 
     const capability: StreamingCapability = {
@@ -87,9 +105,13 @@ export class StreamingDetectionService {
       // Cache the result
       this.capabilityCache.set(modelName, capability);
       
-      SecureLogger.logDebug(`✅ Streaming detection complete for ${modelName}:`, {
+      const endTime = Date.now();
+      const detectionTime = endTime - startTime;
+      
+      SecureLogger.logDebug(`✅ Streaming detection complete for ${modelName} (${detectionTime}ms):`, {
         sapAiCore: capability.sapAiCore,
-        directApi: capability.directApi
+        directApi: capability.directApi,
+        detectionTimeMs: detectionTime
       });
 
     } catch (error) {
@@ -118,7 +140,7 @@ export class StreamingDetectionService {
       };
 
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), this.DETECTION_TIMEOUT);
+      const timeoutId = setTimeout(() => controller.abort(), config.streaming.detection.timeout);
 
       try {
         const response = await fetch(testUrl, {
@@ -182,7 +204,7 @@ export class StreamingDetectionService {
       const testRequest = this.createDirectApiTestRequest(directApiConfig);
       
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), this.DETECTION_TIMEOUT);
+      const timeoutId = setTimeout(() => controller.abort(), config.streaming.detection.timeout);
 
       try {
         const response = await fetch(testUrl, {
@@ -272,7 +294,7 @@ export class StreamingDetectionService {
   private isCacheValid(capability: StreamingCapability): boolean {
     const now = new Date().getTime();
     const cacheTime = capability.lastChecked.getTime();
-    return (now - cacheTime) < this.CACHE_DURATION;
+    return (now - cacheTime) < config.streaming.detection.cacheTime;
   }
 
   /**
@@ -317,6 +339,94 @@ export class StreamingDetectionService {
     });
     
     return summary;
+  }
+
+  /**
+   * Get performance metrics for monitoring
+   */
+  getPerformanceMetrics(): PerformanceMetrics & { cacheHitRate: number; avgDetectionTimeMs: number } {
+    const totalRequests = this.performanceMetrics.cacheHits + this.performanceMetrics.cacheMisses;
+    const cacheHitRate = totalRequests > 0 ? (this.performanceMetrics.cacheHits / totalRequests) * 100 : 0;
+    
+    const avgDetectionTime = this.performanceMetrics.testCount > 0 ? 
+      (this.performanceMetrics.detectionEndTime - this.performanceMetrics.detectionStartTime) / this.performanceMetrics.testCount : 0;
+
+    return {
+      ...this.performanceMetrics,
+      cacheHitRate: Math.round(cacheHitRate * 100) / 100,
+      avgDetectionTimeMs: Math.round(avgDetectionTime * 100) / 100
+    };
+  }
+
+  /**
+   * Reset performance metrics
+   */
+  resetPerformanceMetrics(): void {
+    this.performanceMetrics = {
+      detectionStartTime: Date.now(),
+      detectionEndTime: Date.now(),
+      testCount: 0,
+      cacheHits: 0,
+      cacheMisses: 0
+    };
+    SecureLogger.logDebug('🔄 Performance metrics reset');
+  }
+
+  /**
+   * Detect streaming capabilities for multiple models concurrently
+   */
+  async detectMultipleCapabilities(
+    models: Array<{
+      modelName: string;
+      deploymentId: string;
+      directApiConfig?: DirectApiConfig;
+      modelConfig?: any;
+    }>
+  ): Promise<Map<string, StreamingCapability>> {
+    const maxConcurrent = config.streaming.detection.concurrentTests;
+    const results = new Map<string, StreamingCapability>();
+    
+    // Process models in batches
+    for (let i = 0; i < models.length; i += maxConcurrent) {
+      const batch = models.slice(i, i + maxConcurrent);
+      
+      const batchPromises = batch.map(async ({ modelName, deploymentId, directApiConfig, modelConfig }) => {
+        try {
+          const capability = await this.detectStreamingCapability(modelName, deploymentId, directApiConfig, modelConfig);
+          return { modelName, capability };
+        } catch (error) {
+          SecureLogger.logError('Batch detection error', error, modelName);
+          return {
+            modelName,
+            capability: {
+              sapAiCore: false,
+              directApi: false,
+              lastChecked: new Date(),
+              autoDetected: false,
+              error: error instanceof Error ? error.message : 'Unknown error'
+            } as StreamingCapability
+          };
+        }
+      });
+
+      const batchResults = await Promise.all(batchPromises);
+      batchResults.forEach(({ modelName, capability }) => {
+        results.set(modelName, capability);
+      });
+
+      // Small delay between batches to avoid overwhelming endpoints
+      if (i + maxConcurrent < models.length) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+    }
+
+    SecureLogger.logDebug(`✅ Batch detection complete for ${models.length} models`, {
+      totalModels: models.length,
+      batchSize: maxConcurrent,
+      successCount: Array.from(results.values()).filter(cap => !cap.error).length
+    });
+
+    return results;
   }
 }
 

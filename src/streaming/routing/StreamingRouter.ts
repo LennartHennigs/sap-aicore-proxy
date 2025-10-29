@@ -6,6 +6,7 @@ import { directApiHandler } from '../../handlers/direct-api-handler.js';
 import { modelRouter, type ModelConfig } from '../../models/model-router.js';
 import { responseValidator } from '../../utils/response-validator.js';
 import { SecureLogger } from '../../utils/secure-logger.js';
+import { config } from '../../config/app-config.js';
 
 export interface StreamingRoute {
   method: 'sap-aicore-true' | 'direct-api-true' | 'sap-aicore-mock' | 'fallback-mock';
@@ -226,45 +227,103 @@ export class StreamingRouter {
       throw new Error('SAP AI Core API call failed');
     }
 
-    // Simulate streaming by chunking the response
-    const text = response.text;
-    const chunkSize = 8; // Characters per chunk
-    
-    for (let i = 0; i < text.length; i += chunkSize) {
-      const chunkText = text.slice(i, i + chunkSize);
-      const rawChunk = {
-        delta: chunkText,
+    // Use optimized mock streaming algorithm
+    yield* this.optimizedMockStreaming(response.text, modelName);
+  }
+
+  /**
+   * Optimized mock streaming with dynamic chunk sizing and natural delays
+   */
+  private async *optimizedMockStreaming(text: string, modelName: string): AsyncIterable<StreamChunk> {
+    const streamingConfig = config.streaming.mockStreaming;
+    const words = text.split(/(\s+)/); // Split on whitespace but keep separators
+    let currentChunk = '';
+    let chunkIndex = 0;
+
+    for (let i = 0; i < words.length; i++) {
+      const word = words[i];
+      currentChunk += word;
+
+      // Dynamic chunk size calculation
+      const baseSize = streamingConfig.baseChunkSize;
+      const variation = streamingConfig.chunkSizeVariation;
+      const targetChunkSize = streamingConfig.wordBoundaryAware ? 
+        baseSize + Math.floor(Math.random() * variation) :
+        baseSize;
+
+      // Check if we should send this chunk
+      const shouldSendChunk = 
+        currentChunk.length >= targetChunkSize ||
+        i === words.length - 1 || // Last chunk
+        (streamingConfig.wordBoundaryAware && word.includes('.')) || // Sentence boundary
+        (streamingConfig.wordBoundaryAware && word.includes('!')) ||
+        (streamingConfig.wordBoundaryAware && word.includes('?'));
+
+      if (shouldSendChunk && currentChunk.trim()) {
+        const rawChunk = {
+          delta: currentChunk,
+          finished: false
+        };
+
+        // Batch validation for better performance
+        const chunkToYield = config.streaming.validation.asyncValidation ?
+          rawChunk : // Skip validation if async validation is enabled
+          this.validateChunk(rawChunk, modelName);
+
+        yield chunkToYield;
+
+        // Natural streaming delay with variation
+        const baseDelay = streamingConfig.baseDelay;
+        const delayVariation = streamingConfig.delayVariation;
+        const delay = baseDelay + Math.floor(Math.random() * delayVariation);
+        
+        if (delay > 0) {
+          await new Promise(resolve => setTimeout(resolve, delay));
+        }
+
+        currentChunk = '';
+        chunkIndex++;
+      }
+    }
+
+    // Send any remaining content
+    if (currentChunk.trim()) {
+      yield {
+        delta: currentChunk,
         finished: false
       };
-      
-      // Validate and correct the chunk
-      const validation = responseValidator.validateStreamChunk(rawChunk, modelName);
-      const chunkToYield = validation.corrected ? validation.correctedChunk! : rawChunk;
-      
-      if (validation.corrected) {
-        SecureLogger.logDebug(`SAP AI Core mock stream chunk corrected for ${modelName}: ${validation.issues.join(', ')}`);
-      }
-      
-      yield chunkToYield;
-      
-      // Add small delay to simulate streaming
-      await new Promise(resolve => setTimeout(resolve, 30));
     }
-    
+
     // Send final chunk with usage info
     const finalChunk = {
       delta: '',
       usage: {
         promptTokens: 0, // SAP AI Core doesn't provide detailed usage
-        completionTokens: 0,
-        totalTokens: 0
+        completionTokens: text.length,
+        totalTokens: text.length
       },
       finished: true
     };
+
+    yield finalChunk;
+  }
+
+  /**
+   * Validate chunk with performance optimization
+   */
+  private validateChunk(chunk: any, modelName: string): StreamChunk {
+    if (config.streaming.validation.bypassTrustedSources) {
+      // Skip validation for trusted models/sources
+      return chunk;
+    }
+
+    const validation = responseValidator.validateStreamChunk(chunk, modelName);
+    if (validation.corrected) {
+      SecureLogger.logDebug(`Mock stream chunk corrected for ${modelName}: ${validation.issues.join(', ')}`);
+      return validation.correctedChunk!;
+    }
     
-    // Validate final chunk
-    const finalValidation = responseValidator.validateStreamChunk(finalChunk, modelName);
-    yield finalValidation.corrected ? finalValidation.correctedChunk! : finalChunk;
+    return chunk;
   }
 
   /**

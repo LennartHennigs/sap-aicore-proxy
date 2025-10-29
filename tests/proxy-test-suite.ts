@@ -419,45 +419,57 @@ export class ProxyTestSuite {
   private convertResponseValidationResults(results: ResponseValidationTestResults): ExtendedTestResult[] {
     const testResults: ExtendedTestResult[] = [];
     
-    Object.entries(results.schemaValidationTests).forEach(([model, result]) => {
+    if (!results || !results.schemaValidation) {
+      return testResults;
+    }
+    
+    Object.entries(results.schemaValidation).forEach(([model, result]) => {
       testResults.push({
         ...result,
         testName: `${model} Schema Validation`,
-        duration: result.responseTime
+        duration: result.responseTime || 0
       });
     });
     
-    Object.entries(results.fieldValidationTests).forEach(([model, result]) => {
-      testResults.push({
-        ...result,
-        testName: `${model} Field Validation`,
-        duration: result.responseTime
+    if (results.fieldValidation) {
+      Object.entries(results.fieldValidation).forEach(([model, result]) => {
+        testResults.push({
+          ...result,
+          testName: `${model} Field Validation`,
+          duration: result.responseTime || 0
+        });
       });
-    });
+    }
     
-    Object.entries(results.usageValidationTests).forEach(([model, result]) => {
-      testResults.push({
-        ...result,
-        testName: `${model} Usage Validation`,
-        duration: result.responseTime
+    if (results.usageValidation) {
+      Object.entries(results.usageValidation).forEach(([model, result]) => {
+        testResults.push({
+          ...result,
+          testName: `${model} Usage Validation`,
+          duration: result.responseTime || 0
+        });
       });
-    });
+    }
     
-    Object.entries(results.timestampValidationTests).forEach(([model, result]) => {
-      testResults.push({
-        ...result,
-        testName: `${model} Timestamp Validation`,
-        duration: result.responseTime
+    if (results.timestampValidation) {
+      Object.entries(results.timestampValidation).forEach(([model, result]) => {
+        testResults.push({
+          ...result,
+          testName: `${model} Timestamp Validation`,
+          duration: result.responseTime || 0
+        });
       });
-    });
+    }
     
-    Object.entries(results.contentValidationTests).forEach(([model, result]) => {
-      testResults.push({
-        ...result,
-        testName: `${model} Content Validation`,
-        duration: result.responseTime
+    if (results.contentValidation) {
+      Object.entries(results.contentValidation).forEach(([model, result]) => {
+        testResults.push({
+          ...result,
+          testName: `${model} Content Validation`,
+          duration: result.responseTime || 0
+        });
       });
-    });
+    }
     
     return testResults;
   }
@@ -465,50 +477,58 @@ export class ProxyTestSuite {
   private convertErrorHandlingResults(results: ErrorHandlingTestResults): ExtendedTestResult[] {
     const testResults: ExtendedTestResult[] = [];
     
+    if (!results) {
+      return testResults;
+    }
+    
     testResults.push({
-      ...results.invalidModelTest,
+      ...results.invalidModel,
       testName: 'Invalid Model Error',
-      duration: results.invalidModelTest.responseTime
+      duration: results.invalidModel.responseTime || 0
     });
     
-    Object.entries(results.malformedRequestTests).forEach(([testName, result]) => {
-      testResults.push({
-        ...result,
-        testName: `Malformed Request: ${testName}`,
-        duration: result.responseTime
+    if (results.malformedRequests) {
+      Object.entries(results.malformedRequests).forEach(([testName, result]) => {
+        testResults.push({
+          ...result,
+          testName: `Malformed Request: ${testName}`,
+          duration: result.responseTime || 0
+        });
       });
-    });
+    }
     
     testResults.push({
-      ...results.authenticationErrorTest,
+      ...results.authenticationErrors,
       testName: 'Authentication Error',
-      duration: results.authenticationErrorTest.responseTime
+      duration: results.authenticationErrors.responseTime || 0
     });
     
     testResults.push({
-      ...results.timeoutTest,
+      ...results.networkTimeouts,
       testName: 'Timeout Test',
-      duration: results.timeoutTest.responseTime
+      duration: results.networkTimeouts.responseTime || 0
     });
     
     testResults.push({
-      ...results.largePayloadTest,
+      ...results.largePayloads,
       testName: 'Large Payload Test',
-      duration: results.largePayloadTest.responseTime
+      duration: results.largePayloads.responseTime || 0
     });
     
-    Object.entries(results.invalidImageTests).forEach(([model, result]) => {
-      testResults.push({
-        ...result,
-        testName: `${model} Invalid Image Error`,
-        duration: result.responseTime
+    if (results.invalidImages) {
+      Object.entries(results.invalidImages).forEach(([model, result]) => {
+        testResults.push({
+          ...result,
+          testName: `${model} Invalid Image Error`,
+          duration: result.responseTime || 0
+        });
       });
-    });
+    }
     
     testResults.push({
-      ...results.rateLimitTest,
+      ...results.rateLimiting,
       testName: 'Rate Limit Test',
-      duration: results.rateLimitTest.responseTime
+      duration: results.rateLimiting.responseTime || 0
     });
     
     return testResults;

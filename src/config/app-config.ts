@@ -62,6 +62,32 @@ interface AppConfig {
       logFile: string;
     };
   };
+  streaming: {
+    detection: {
+      timeout: number;
+      cacheTime: number;
+      concurrentTests: number;
+      skipConfiguredModels: boolean;
+    };
+    mockStreaming: {
+      baseChunkSize: number;
+      chunkSizeVariation: number;
+      baseDelay: number;
+      delayVariation: number;
+      wordBoundaryAware: boolean;
+    };
+    validation: {
+      batchSize: number;
+      asyncValidation: boolean;
+      validationCache: boolean;
+      bypassTrustedSources: boolean;
+    };
+    routing: {
+      preComputeRoutes: boolean;
+      routeCacheTime: number;
+      fallbackCacheTime: number;
+    };
+  };
 }
 
 function validateEnvVar(name: string, value: string | undefined): string {
@@ -135,6 +161,32 @@ export const config: AppConfig = {
       enabled: process.env.RESPONSE_ANALYSIS_LOGGING === 'true',
       logAllResponses: process.env.LOG_ALL_RESPONSES === 'true',
       logFile: process.env.RESPONSE_LOG_FILE || './logs/response-analysis.jsonl'
+    }
+  },
+  streaming: {
+    detection: {
+      timeout: parseInt(process.env.STREAMING_DETECTION_TIMEOUT || '3000', 10),
+      cacheTime: parseInt(process.env.STREAMING_CACHE_TIME || '604800000', 10), // 7 days
+      concurrentTests: parseInt(process.env.STREAMING_CONCURRENT_TESTS || '3', 10),
+      skipConfiguredModels: process.env.STREAMING_SKIP_CONFIGURED === 'true'
+    },
+    mockStreaming: {
+      baseChunkSize: parseInt(process.env.MOCK_STREAMING_BASE_CHUNK_SIZE || '12', 10),
+      chunkSizeVariation: parseInt(process.env.MOCK_STREAMING_CHUNK_VARIATION || '8', 10),
+      baseDelay: parseInt(process.env.MOCK_STREAMING_BASE_DELAY || '8', 10),
+      delayVariation: parseInt(process.env.MOCK_STREAMING_DELAY_VARIATION || '7', 10),
+      wordBoundaryAware: process.env.MOCK_STREAMING_WORD_BOUNDARY === 'true'
+    },
+    validation: {
+      batchSize: parseInt(process.env.STREAMING_VALIDATION_BATCH_SIZE || '5', 10),
+      asyncValidation: process.env.STREAMING_ASYNC_VALIDATION !== 'false',
+      validationCache: process.env.STREAMING_VALIDATION_CACHE !== 'false',
+      bypassTrustedSources: process.env.STREAMING_BYPASS_TRUSTED === 'true'
+    },
+    routing: {
+      preComputeRoutes: process.env.STREAMING_PRECOMPUTE_ROUTES !== 'false',
+      routeCacheTime: parseInt(process.env.STREAMING_ROUTE_CACHE_TIME || '3600000', 10), // 1 hour
+      fallbackCacheTime: parseInt(process.env.STREAMING_FALLBACK_CACHE_TIME || '300000', 10) // 5 minutes
     }
   }
 };
