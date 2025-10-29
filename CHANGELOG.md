@@ -5,6 +5,35 @@ All notable changes to the SAP AI Core Proxy project will be documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.6] - 2025-10-29
+
+### 🧹 Repository Cleanup & Cache Management
+
+This patch release adds proper git exclusion for the version check cache file to prevent future tracking issues.
+
+### Fixed
+
+#### 🗂️ Git Repository Management
+
+- **Cache File Exclusion**: Added `version-check-cache.json` to .gitignore to prevent tracking of runtime-generated cache files
+- **Removed Stale Cache**: Removed existing cache file from git tracking to prevent future stale cache issues
+- **Repository Hygiene**: Ensures cache files are generated at runtime rather than being committed to the repository
+
+### Technical Details
+
+**Issue**: The version check cache file was being tracked in git, which could lead to stale cache data being committed and causing issues across different environments.
+
+**Solution**: Added the cache file to `.gitignore` and removed it from git tracking, ensuring it's generated fresh on each deployment/environment.
+
+### Benefits
+
+- **Clean Repository**: Cache files no longer pollute the git repository
+- **Environment Independence**: Each environment generates its own fresh cache
+- **Prevents Stale Data**: Eliminates the possibility of committing outdated cache information
+- **Best Practices**: Follows standard practices for excluding runtime-generated files
+
+---
+
 ## [1.2.5] - 2025-10-29
 
 ### 🐛 Critical Bug Fix: Version Check Cache Persistence
