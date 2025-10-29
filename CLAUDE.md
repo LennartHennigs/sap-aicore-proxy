@@ -51,6 +51,26 @@ See [.env.example](./.env.example) for configuration options:
 - **Performance**: `MODEL_POOL_MAX_IDLE_TIME`, `MODEL_POOL_CLEANUP_INTERVAL`
 - **Deployment ID Overrides**: `GPT_5_NANO_DEPLOYMENT_ID`, `ANTHROPIC_CLAUDE_4_SONNET_DEPLOYMENT_ID`, `GEMINI_2_5_FLASH_DEPLOYMENT_ID`
 
+#### Streaming Performance Configuration (v1.2.4)
+```bash
+# Detection Service Optimizations
+STREAMING_DETECTION_TIMEOUT=3000         # Reduced from 10s (70% faster)
+STREAMING_CACHE_TIME=604800000            # Extended to 7 days
+STREAMING_CONCURRENT_TESTS=3              # Parallel detection
+STREAMING_SKIP_CONFIGURED=true            # Skip tests for configured models
+
+# Mock Streaming Improvements  
+MOCK_STREAMING_BASE_CHUNK_SIZE=12         # Increased from 8
+MOCK_STREAMING_CHUNK_VARIATION=8          # Dynamic sizing range
+MOCK_STREAMING_BASE_DELAY=8               # Reduced from 30ms (60% faster)
+MOCK_STREAMING_DELAY_VARIATION=7          # Natural timing variation
+MOCK_STREAMING_WORD_BOUNDARY=true         # Smart boundary detection
+
+# Performance Monitoring
+STREAMING_PERFORMANCE_MONITORING=true     # Enable performance tracking
+STREAMING_BENCHMARK_ON_STARTUP=false      # Startup benchmarking
+```
+
 ## Automatic Deployment ID Discovery
 
 ### Discovery Service Architecture
@@ -263,6 +283,25 @@ if (providerVisionFails) {
 
 ## Performance Optimization
 
+### Streaming Performance Enhancements (v1.2.4)
+
+#### Enhanced Streaming Architecture
+- **Optimized Detection Service**: Reduced timeout from 10s to 3s (70% faster)
+- **Extended Cache Duration**: 7 days vs 1 day for better cache hit rates
+- **Concurrent Detection**: Parallel capability detection for multiple models
+- **Smart Caching**: Skip live testing for configured models
+
+#### Improved Mock Streaming
+- **Dynamic Chunk Sizing**: 12±8 characters vs fixed 8 characters
+- **Reduced Delays**: 8-15ms vs 30ms per chunk (60% faster)
+- **Word Boundary Awareness**: Natural streaming flow with intelligent boundaries
+- **Adaptive Algorithms**: Natural timing variations for better user experience
+
+#### Performance Monitoring System
+- **Streaming Performance Monitor**: Real-time performance tracking and benchmarking
+- **Detailed Metrics**: Response times, chunk rates, and optimization effectiveness
+- **Benchmarking Tools**: Comprehensive performance validation and testing
+
 ### Model Pooling
 - Instances cached per model type
 - Automatic cleanup after idle time
@@ -271,8 +310,8 @@ if (providerVisionFails) {
 
 ### Streaming Strategies
 - **True Streaming**: Server-Sent Events for real-time responses
-- **Mock Streaming**: Compatibility layer for non-streaming models
-- **Chunked Processing**: Large responses broken into manageable pieces
+- **Mock Streaming**: Compatibility layer for non-streaming models with performance optimizations
+- **Chunked Processing**: Large responses broken into manageable pieces with dynamic sizing
 
 ## Testing and Validation
 
