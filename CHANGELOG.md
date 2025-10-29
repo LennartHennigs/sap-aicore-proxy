@@ -5,6 +5,63 @@ All notable changes to the SAP AI Core Proxy project will be documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.8] - 2025-10-29
+
+### 🚨 Critical Bug Fix: Update System Dependency Management
+
+This patch release fixes a critical bug in the automatic update system that caused server startup failures after updates due to missing dev dependencies.
+
+### Fixed
+
+#### 🛠️ Update Handler Critical Fix
+
+- **Dependency Installation**: Fixed `updateDependencies()` to use `npm install` instead of `npm install --production`
+- **tsx Dependency Issue**: Resolved `ERR_MODULE_NOT_FOUND` error for tsx package after updates
+- **Dev Dependencies**: Ensured dev dependencies are properly installed during updates (tsx is required for server startup)
+- **Update Process Integrity**: Fixed complete update workflow to maintain all required dependencies
+
+### Technical Details
+
+#### Root Cause Analysis
+
+The automatic update system had a critical flaw in dependency management:
+
+**Problem**: The update handler used `npm install --production` which excludes dev dependencies
+**Impact**: tsx (a dev dependency) is required for the server startup script but was not installed
+**Result**: Server would fail to start after successful updates with `Cannot find package 'tsx'` error
+
+#### Solution Implementation
+
+```typescript
+// BEFORE (BROKEN)
+await execAsync('npm install --production', { ... });  // ❌ Excludes dev deps
+
+// AFTER (FIXED) 
+await execAsync('npm install', { ... });               // ✅ Includes all deps
+```
+
+#### Why tsx is Critical
+
+- tsx is listed in `devDependencies` but is essential for runtime
+- The npm start script uses: `node --import=tsx --env-file=.env ./src/sap-aicore-proxy.ts`
+- Without tsx, the server cannot start even though the update completed successfully
+
+### Verification
+
+- ✅ Update process now installs all dependencies including dev dependencies
+- ✅ Server starts successfully after automatic updates
+- ✅ tsx and all other dev dependencies are properly maintained during updates
+- ✅ Update rollback functionality maintains dependency consistency
+
+### Benefits
+
+- **Reliable Updates**: Automatic updates now work end-to-end without breaking server startup
+- **Dependency Consistency**: All required dependencies maintained across update process
+- **User Experience**: No more manual dependency installation after updates
+- **Production Ready**: Update system now suitable for production deployments
+
+---
+
 ## [1.2.7] - 2025-10-29
 
 ### 🔧 Interactive Update System Enhancement
