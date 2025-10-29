@@ -16,7 +16,7 @@ export class ConsolePrompter {
   private promptTimeout: number;
 
   constructor() {
-    this.promptTimeout = parseInt(process.env.VERSION_CHECK_PROMPT_TIMEOUT || '10', 10) * 1000;
+    this.promptTimeout = parseInt(process.env.VERSION_CHECK_PROMPT_TIMEOUT || '5', 10) * 1000;
   }
 
   /**
@@ -51,39 +51,12 @@ export class ConsolePrompter {
       return;
     }
 
-    console.log('\n🔔 UPDATE AVAILABLE');
-    console.log(`   Current: v${versionInfo.current}`);
-    console.log(`   Latest:  v${versionInfo.latest}`);
-    console.log(`   URL: ${versionInfo.releaseUrl}`);
-    
-    if (versionInfo.releaseNotes && versionInfo.releaseNotes !== 'No release notes available') {
-      console.log('\n📋 Release Notes:');
-      const lines = versionInfo.releaseNotes.split('\n');
-      lines.forEach(line => {
-        if (line.trim()) {
-          console.log(`   ${line.trim()}`);
-        }
-      });
-    }
-    
-    console.log('\n   Use the health endpoint or restart to check for updates again.\n');
+    console.log(`\n🔔 Update available: v${versionInfo.current} → v${versionInfo.latest}`);
+    console.log('   Use the health endpoint or restart to check for updates again.\n');
   }
 
   private displayUpdateNotification(versionInfo: VersionInfo): void {
-    console.log('\n🔔 UPDATE AVAILABLE');
-    console.log(`   Current: v${versionInfo.current} → Latest: v${versionInfo.latest}`);
-    console.log(`   Release: ${versionInfo.releaseUrl}`);
-    
-    if (versionInfo.releaseNotes && versionInfo.releaseNotes !== 'No release notes available') {
-      console.log('\n📋 Release Notes:');
-      const lines = versionInfo.releaseNotes.split('\n');
-      lines.forEach(line => {
-        if (line.trim()) {
-          console.log(`   ${line.trim()}`);
-        }
-      });
-    }
-    console.log(''); // Empty line for better formatting
+    console.log(`🔔 Update available: v${versionInfo.current} → v${versionInfo.latest}`);
   }
 
   private async askUserConfirmation(): Promise<boolean> {

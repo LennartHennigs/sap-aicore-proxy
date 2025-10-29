@@ -1,6 +1,6 @@
-import { exec } from 'child_process';
+import { exec, execSync, spawn } from 'child_process';
 import { promisify } from 'util';
-import { createWriteStream, existsSync, mkdirSync, rmSync, createReadStream } from 'fs';
+import { createWriteStream, existsSync, mkdirSync, rmSync, createReadStream, accessSync, constants, writeFileSync, readFileSync } from 'fs';
 import { join } from 'path';
 import { pipeline } from 'stream/promises';
 import { Readable } from 'stream';
@@ -53,6 +53,12 @@ export class UpdateHandler {
    */
   async performUpdate(versionInfo: VersionInfo): Promise<UpdateResult> {
     console.log(`\n🔄 Starting update from v${versionInfo.current} to v${versionInfo.latest}...`);
+    
+    // Check if update is possible
+    const canUpdate = this.canUpdate();
+    if (!canUpdate.possible) {
+      throw new Error(`Update not possible: ${canUpdate.reason}`);
+    }
     
     try {
       // Step 1: Download the release
@@ -181,22 +187,55 @@ export class UpdateHandler {
     const backupDir = join(this.tempDir, 'backup');
     
     try {
-      // Simple backup approach - copy critical files
-      const criticalFiles = ['package.json', 'src/', 'scripts/', 'tsconfig.json'];
+      // Comprehensive backup approach - copy all critical files and directories
+      const criticalFiles = [
+        'package.json',
+        'package-lock.json',
+        'src/',
+        'scripts/',
+        'tsconfig.json',
+        'config/',
+        'docs/',
+        'README.md',
+        'CHANGELOG.md',
+        'HOW_TO_INSTALL.md'
+      ];
       
       if (!existsSync(backupDir)) {
         mkdirSync(backupDir, { recursive: true });
       }
       
+      // Create a backup timestamp file
+      const backupInfo = {
+        timestamp: new Date().toISOString(),
+        version: this.getCurrentVersion(),
+        files: []
+      };
+      
       for (const file of criticalFiles) {
         const sourcePath = join(process.cwd(), file);
         if (existsSync(sourcePath)) {
           const targetPath = join(backupDir, file);
+          
+          // Ensure target directory exists
+          const targetDir = join(targetPath, '..');
+          if (!existsSync(targetDir)) {
+            mkdirSync(targetDir, { recursive: true });
+          }
+          
           await execAsync(`cp -r "${sourcePath}" "${targetPath}"`);
+          backupInfo.files.push(file);
+          console.log(`   ✓ Backed up ${file}`);
         }
       }
       
-      SecureLogger.logDebug('Backup created successfully');
+      // Save backup info
+      writeFileSync(
+        join(backupDir, 'backup-info.json'),
+        JSON.stringify(backupInfo, null, 2)
+      );
+      
+      SecureLogger.logDebug(`Backup created successfully with ${backupInfo.files.length} items`);
     } catch (error) {
       throw new Error(`Failed to create backup: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
@@ -275,11 +314,41 @@ export class UpdateHandler {
 
   private async restartServer(): Promise<void> {
     console.log('🔄 Server will restart in 2 seconds...');
+    console.log('📝 Note: After update, you may need to manually restart with: npm start');
     
     // Give a moment for the message to display
     setTimeout(() => {
-      process.exit(0); // The process manager (npm, pm2, etc.) should restart it
+      try {
+        // Try to restart using npm script if available
+        const npm = spawn('npm', ['start'], {
+          detached: true,
+          stdio: 'ignore',
+          cwd: process.cwd()
+        });
+        npm.unref();
+        
+        console.log('🚀 New server instance started');
+      } catch (error) {
+        console.log('⚠️  Manual restart required - run: npm start');
+      }
+      
+      // Exit current process
+      process.exit(0);
     }, 2000);
+  }
+
+  /**
+   * Get current version from package.json
+   */
+  private getCurrentVersion(): string {
+    try {
+      const packagePath = join(process.cwd(), 'package.json');
+      const packageJson = JSON.parse(readFileSync(packagePath, 'utf8'));
+      return packageJson.version;
+    } catch (error) {
+      SecureLogger.logError('Failed to read current version from package.json', error);
+      return '0.0.0';
+    }
   }
 
   /**
@@ -290,9 +359,7 @@ export class UpdateHandler {
     const requiredTools = ['cp', 'rsync', 'npm'];
     
     for (const tool of requiredTools) {
-      try {
-        require('child_process').execSync(`which ${tool}`, { stdio: 'ignore' });
-      } catch (error) {
+      if (!this.isToolAvailable(tool)) {
         return {
           possible: false,
           reason: `Required tool '${tool}' not found`
@@ -302,7 +369,7 @@ export class UpdateHandler {
     
     // Check if we have write permissions
     try {
-      require('fs').accessSync(process.cwd(), require('fs').constants.W_OK);
+      accessSync(process.cwd(), constants.W_OK);
     } catch (error) {
       return {
         possible: false,
@@ -311,6 +378,48 @@ export class UpdateHandler {
     }
     
     return { possible: true };
+  }
+
+  /**
+   * Check if a system tool is available
+   */
+  private isToolAvailable(tool: string): boolean {
+    try {
+      // Try using 'which' command first
+      execSync(`which ${tool}`, { stdio: 'pipe', encoding: 'utf8' });
+      return true;
+    } catch (error) {
+      // If 'which' fails, try common system paths
+      const commonPaths = ['/bin', '/usr/bin', '/usr/local/bin', '/opt/homebrew/bin'];
+      
+      for (const path of commonPaths) {
+        try {
+          const toolPath = `${path}/${tool}`;
+          if (existsSync(toolPath)) {
+            // Double-check it's executable
+            try {
+              accessSync(toolPath, constants.X_OK);
+              return true;
+            } catch (e) {
+              continue;
+            }
+          }
+        } catch (e) {
+          continue;
+        }
+      }
+      
+      // Final attempt: try to execute the tool directly
+      try {
+        execSync(`${tool} --version 2>/dev/null || ${tool} --help 2>/dev/null || echo "tool exists"`, { 
+          stdio: 'pipe', 
+          timeout: 3000 
+        });
+        return true;
+      } catch (finalError) {
+        return false;
+      }
+    }
   }
 }
 
