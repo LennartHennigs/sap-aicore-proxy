@@ -265,8 +265,9 @@ export class UpdateHandler {
     try {
       console.log('   Installing/updating npm dependencies...');
       
-      // Run npm install with production flag
-      const { stdout, stderr } = await execAsync('npm install --production', {
+      // Run npm install WITHOUT production flag to include dev dependencies
+      // tsx is a dev dependency but required for the server to run
+      const { stdout, stderr } = await execAsync('npm install', {
         cwd: process.cwd(),
         timeout: 120000 // 2 minute timeout
       });
